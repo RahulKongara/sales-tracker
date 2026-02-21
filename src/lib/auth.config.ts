@@ -53,7 +53,7 @@ export const authConfig: NextAuthConfig = {
                     const redirectTo = isAdmin
                         ? "/admin/dashboard"
                         : "/bills/new";
-                    return Response.redirect(new URL(redirectTo, nextUrl));
+                    return Response.redirect(new URL(redirectTo, nextUrl.origin));
                 }
                 return true;
             }
@@ -63,7 +63,7 @@ export const authConfig: NextAuthConfig = {
 
             // Admin routes require ADMIN role
             if (path.startsWith("/admin") && !isAdmin) {
-                return Response.redirect(new URL("/bills/new", nextUrl));
+                return Response.redirect(new URL("/bills/new", nextUrl.origin));
             }
 
             return true;
