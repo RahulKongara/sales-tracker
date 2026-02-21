@@ -1,48 +1,13 @@
-import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 
 /**
- * Middleware for route protection and role enforcement.
+ * Edge-compatible middleware.
  *
- * - Unauthenticated users → redirect to /login
- * - Employees accessing /admin/* → redirect to /bills/new
- * - Authenticated users accessing /login → redirect based on role
+ * Uses ONLY the lightweight authConfig (no bcrypt, no prisma).
+ * The `authorized` callback in authConfig handles all routing logic.
  */
-export default auth((req) => {
-    const { nextUrl, auth: session } = req;
-    const isLoggedIn = !!session?.user;
-    const isAdmin = session?.user?.role === "ADMIN";
-    const path = nextUrl.pathname;
-
-    // Public paths that don't require session auth
-    const isPublicPath =
-        path === "/login" ||
-        path.startsWith("/api/auth") ||
-        path.startsWith("/api/reports");
-
-    if (isPublicPath) {
-        // If logged in and trying to access login, redirect
-        if (isLoggedIn && path === "/login") {
-            const redirectTo = isAdmin ? "/admin/dashboard" : "/bills/new";
-            return NextResponse.redirect(new URL(redirectTo, nextUrl));
-        }
-        return NextResponse.next();
-    }
-
-    // All other paths require authentication
-    if (!isLoggedIn) {
-        const loginUrl = new URL("/login", nextUrl);
-        loginUrl.searchParams.set("callbackUrl", path);
-        return NextResponse.redirect(loginUrl);
-    }
-
-    // Admin routes require ADMIN role
-    if (path.startsWith("/admin") && !isAdmin) {
-        return NextResponse.redirect(new URL("/bills/new", nextUrl));
-    }
-
-    return NextResponse.next();
-});
+export default NextAuth(authConfig).auth;
 
 export const config = {
     matcher: [

@@ -2,15 +2,17 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { SESSION_MAX_AGE } from "@/lib/constants";
+import { authConfig } from "@/lib/auth.config";
 
 /**
- * NextAuth v5 configuration.
+ * Full NextAuth v5 configuration (server-only).
  *
- * Uses Credentials provider (username + password) against
- * the `users` table. JWT strategy for stateless sessions.
+ * Extends the edge-safe authConfig with the Credentials provider
+ * that uses bcryptjs (heavy) and prisma (Node-only). This file
+ * must NEVER be imported in middleware — use auth.config.ts there.
  */
 export const { handlers, signIn, signOut, auth } = NextAuth({
+    ...authConfig,
     providers: [
         Credentials({
             name: "Credentials",
@@ -48,28 +50,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             },
         }),
     ],
-    session: {
-        strategy: "jwt",
-        maxAge: SESSION_MAX_AGE,
-    },
-    pages: {
-        signIn: "/login",
-    },
-    callbacks: {
-        async jwt({ token, user }) {
-            // On first sign-in, attach role and userId
-            if (user) {
-                token.role = (user as { role: string }).role;
-                token.userId = user.id;
-            }
-            return token;
-        },
-        async session({ session, token }) {
-            if (session.user) {
-                session.user.id = token.userId as string;
-                (session.user as { role: string }).role = token.role as string;
-            }
-            return session;
-        },
-    },
 });
