@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// ── Enums ─────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+enum PaymentMode {
+  CASH
+  CARD
+  PAYTM
+}
+
+enum AuditAction {
+  EDIT
+  DELETE
+}
+
+// ── User ──────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  fullName     String   @map("full_name")
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role     @default(EMPLOYEE)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  bills     Bill[]
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+// ── Bill ──────────────────────────────────────────────────────
+
+model Bill {
+  id                 String      @id @default(cuid())
+  billNumber         String      @unique @map("bill_number")
+  createdBy          String      @map("created_by")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  customerName       String?     @map("customer_name")
+  paymentMode        PaymentMode @map("payment_mode")
+  hasPrescription    Boolean     @default(false) @map("has_prescription")
+  prescriptionCharge Decimal     @default(0) @map("prescription_charge") @db.Decimal(10, 2)
+  medicinesSubtotal  Decimal     @map("medicines_subtotal") @db.Decimal(10, 2)
+  grandTotal         Decimal     @map("grand_total") @db.Decimal(10, 2)
+  isDeleted          Boolean     @default(false) @map("is_deleted")
+
+  user      User           @relation(fields: [createdBy], references: [id])
+  lineItems BillLineItem[]
+  auditLogs AuditLog[]
+
+  @@index([createdAt])
+  @@index([createdBy])
+  @@index([paymentMode])
+  @@map("bills")
+}
+
+// ── Bill Line Item ────────────────────────────────────────────
+
+model BillLineItem {
+  id           String  @id @default(cuid())
+  billId       String  @map("bill_id")
+  medicineName String  @map("medicine_name")
+  quantity     Int
+  costPerPiece Decimal @map("cost_per_piece") @db.Decimal(10, 2)
+  subtotal     Decimal @db.Decimal(10, 2)
+  sortOrder    Int     @map("sort_order")
+
+  bill Bill @relation(fields: [billId], references: [id], onDelete: Cascade)
+
+  @@index([billId])
+  @@index([medicineName])
+  @@map("bill_line_items")
+}
+
+// ── Audit Log ─────────────────────────────────────────────────
+
+model AuditLog {
+  id            String      @id @default(cuid())
+  performedBy   String      @map("performed_by")
+  actionType    AuditAction @map("action_type")
+  targetBillId  String      @map("target_bill_id")
+  previousState Json?       @map("previous_state")
+  timestamp     DateTime    @default(now())
+  notes         String?
+
+  user User @relation(fields: [performedBy], references: [id])
+  bill Bill @relation(fields: [targetBillId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// ── System Config ─────────────────────────────────────────────
+
+model SystemConfig {
+  configKey   String   @id @map("config_key")
+  configValue String   @map("config_value")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("system_config")
+}

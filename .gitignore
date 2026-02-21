@@ -44,5 +44,5 @@ next-env.d.ts
 # agent files
 .agent/
 context/
-prisma/
 docs/
+prisma/seed.ts
