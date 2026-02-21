@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="32" fill="#2563EB"/>
+  <g transform="translate(96,96)">
+    <!-- Pill/Capsule -->
+    <rect x="-20" y="-50" width="40" height="100" rx="20" fill="white" opacity="0.95"/>
+    <rect x="-20" y="0" width="40" height="50" rx="0" fill="white" opacity="0.75"/>
+    <!-- Cross -->
+    <rect x="-4" y="-30" width="8" height="24" rx="2" fill="#2563EB"/>
+    <rect x="-12" y="-22" width="24" height="8" rx="2" fill="#2563EB"/>
+  </g>
+</svg>

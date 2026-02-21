@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -17,9 +17,31 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pharmacy Sales Dashboard",
-  description:
-    "Bill Tracking & Sales Analytics — Pharmacy Sales Dashboard",
+  title: {
+    default: "Pharmacy Sales Dashboard",
+    template: "%s — Pharmacy Sales Dashboard",
+  },
+  description: "Bill Tracking & Sales Analytics for Pharmacy Operations",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "PharmaSales",
+  },
+  icons: {
+    icon: "/icon-192.svg",
+    apple: "/icon-192.svg",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#111827" },
+  ],
 };
 
 export default function RootLayout({
@@ -28,11 +50,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
-      >
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
         {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js').catch(() => {});
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
