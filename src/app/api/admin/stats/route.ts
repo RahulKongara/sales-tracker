@@ -19,7 +19,9 @@ export async function GET(req: NextRequest) {
     try {
         // Accept optional date param (YYYY-MM-DD), default to today IST
         const dateParam = req.nextUrl.searchParams.get("date");
-        const { start, end } = dateParam
+        const isValidDate = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam);
+
+        const { start, end } = isValidDate
             ? {
                 start: new Date(`${dateParam}T00:00:00.000+05:30`),
                 end: new Date(`${dateParam}T23:59:59.999+05:30`),
