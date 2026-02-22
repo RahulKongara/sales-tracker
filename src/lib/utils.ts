@@ -27,7 +27,21 @@ export function formatCurrency(amount: number | string): string {
  * Convert a UTC Date to IST and return as Date object.
  */
 export function toIST(date: Date): Date {
-    return new Date(date.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const IST_OFFSET_MS = 330 * 60 * 1000;
+    return new Date(date.getTime() + IST_OFFSET_MS);
+}
+
+/**
+ * Return the current (or given) date as a YYYY-MM-DD string in IST.
+ * Uses deterministic UTC offset math — safe in every Node / browser environment.
+ */
+export function toISTDateString(date?: Date): string {
+    const IST_OFFSET_MS = 330 * 60 * 1000;
+    const istTime = new Date((date ?? new Date()).getTime() + IST_OFFSET_MS);
+    const yyyy = istTime.getUTCFullYear();
+    const mm = String(istTime.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(istTime.getUTCDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
 }
 
 /**
@@ -82,15 +96,51 @@ export function formatISTTime(date: Date): string {
  */
 export function getISTDayBounds(date?: Date): { start: Date; end: Date } {
     const now = date ?? new Date();
-    const istStr = now.toLocaleString("en-CA", {
-        timeZone: "Asia/Kolkata",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-    });
-    // IST is UTC+5:30 → subtract 5:30 to get UTC midnight
+    // IST is UTC+5:30 (330 minutes). Compute IST date components directly
+    // instead of relying on locale-dependent toLocaleString formatting.
+    const IST_OFFSET_MS = 330 * 60 * 1000;
+    const istTime = new Date(now.getTime() + IST_OFFSET_MS);
+    const yyyy = istTime.getUTCFullYear();
+    const mm = String(istTime.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(istTime.getUTCDate()).padStart(2, "0");
+    const istStr = `${yyyy}-${mm}-${dd}`;
+
     const start = new Date(`${istStr}T00:00:00.000+05:30`);
     const end = new Date(`${istStr}T23:59:59.999+05:30`);
+
+    // Safety guard — should never happen with the deterministic format above
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        // Fall back to ±12 h around `now` so queries never crash
+        const fallbackStart = new Date(now);
+        fallbackStart.setUTCHours(0, 0, 0, 0);
+        const fallbackEnd = new Date(now);
+        fallbackEnd.setUTCHours(23, 59, 59, 999);
+        return { start: fallbackStart, end: fallbackEnd };
+    }
+
+    return { start, end };
+}
+
+/**
+ * Validate and parse a user-supplied date string (expected YYYY-MM-DD) into
+ * IST start-of-day / end-of-day Date objects.
+ *
+ * Returns `null` if the value is falsy or not in YYYY-MM-DD format, so
+ * callers can fall back to a sensible default (e.g. today or last-7-days).
+ */
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+export function parseISTDateParam(
+    value: string | null | undefined
+): { start: Date; end: Date } | null {
+    if (!value || !DATE_RE.test(value)) return null;
+
+    const start = new Date(`${value}T00:00:00.000+05:30`);
+    const end = new Date(`${value}T23:59:59.999+05:30`);
+
+    // Guard against edge cases like "9999-99-99" which regex allows but Date rejects
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+
     return { start, end };
 }
 
@@ -102,17 +152,11 @@ export function generateBillNumber(
     date: Date,
     sequenceNumber: number
 ): string {
-    const istDate = new Date(
-        date.toLocaleString("en-CA", {
-            timeZone: "Asia/Kolkata",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-        })
-    );
-    const yyyy = istDate.getFullYear();
-    const mm = String(istDate.getMonth() + 1).padStart(2, "0");
-    const dd = String(istDate.getDate()).padStart(2, "0");
+    const IST_OFFSET_MS = 330 * 60 * 1000;
+    const istTime = new Date(date.getTime() + IST_OFFSET_MS);
+    const yyyy = istTime.getUTCFullYear();
+    const mm = String(istTime.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(istTime.getUTCDate()).padStart(2, "0");
     const seq = String(sequenceNumber).padStart(4, "0");
     return `${yyyy}${mm}${dd}-${seq}`;
 }

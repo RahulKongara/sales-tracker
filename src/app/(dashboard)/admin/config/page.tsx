@@ -2,62 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
-
-/* ────────────────────────────────────────────────────────────── */
-/*  Styles                                                       */
-/* ────────────────────────────────────────────────────────────── */
-
-const card: React.CSSProperties = {
-    background: "var(--bg-primary)",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius-lg)",
-    boxShadow: "var(--shadow-sm)",
-    padding: "1.5rem",
-};
-
-const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "0.625rem 0.75rem",
-    fontSize: "0.875rem",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius)",
-    background: "var(--bg-secondary)",
-    color: "var(--text-primary)",
-    fontFamily: "var(--font-mono)",
-};
-
-const labelStyle: React.CSSProperties = {
-    display: "block",
-    fontSize: "0.75rem",
-    fontWeight: 600,
-    color: "var(--text-secondary)",
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.05em",
-    marginBottom: "0.375rem",
-};
-
-const btnPrimary: React.CSSProperties = {
-    padding: "0.625rem 1.25rem",
-    fontSize: "0.875rem",
-    fontWeight: 600,
-    color: "#fff",
-    background: "var(--text-primary)",
-    border: "none",
-    borderRadius: "var(--radius)",
-    cursor: "pointer",
-};
-
-const btnSmall: React.CSSProperties = {
-    padding: "0.375rem 0.75rem",
-    fontSize: "0.75rem",
-    fontWeight: 500,
-    color: "var(--text-secondary)",
-    background: "var(--bg-secondary)",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius)",
-    cursor: "pointer",
-};
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Component                                                    */
@@ -132,73 +76,27 @@ export default function EmailConfigPage() {
     }
 
     return (
-        <div style={{ minHeight: "100vh", background: "var(--bg-secondary)" }}>
-            {/* ── Header ──────────────────────────────────────── */}
-            <header
-                style={{
-                    background: "var(--bg-primary)",
-                    borderBottom: "1px solid var(--border-default)",
-                    padding: "0.75rem 1.5rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                }}
-            >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <span style={{ fontSize: "1.25rem" }}>⚙️</span>
-                    <h1
-                        style={{
-                            fontSize: "1rem",
-                            fontWeight: 600,
-                            color: "var(--text-primary)",
-                            letterSpacing: "-0.01em",
-                        }}
-                    >
-                        Email Configuration
-                    </h1>
-                </div>
-                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                    <button onClick={() => router.push("/admin/dashboard")} style={btnSmall}>
-                        ← Dashboard
-                    </button>
-                    <button onClick={() => signOut({ callbackUrl: "/login" })} style={btnSmall}>
-                        Sign Out
-                    </button>
-                </div>
-            </header>
+        <div className="min-h-screen bg-surface-secondary">
 
-            <div style={{ maxWidth: "600px", margin: "0 auto", padding: "1.5rem" }}>
+            <div className="max-w-[600px] mx-auto p-6">
                 {loading ? (
-                    <div style={{ ...card, textAlign: "center", color: "var(--text-muted)" }}>
+                    <div className="bg-surface border border-border rounded-lg shadow-sm p-6 text-center text-fg-muted">
                         Loading...
                     </div>
                 ) : (
                     <form onSubmit={handleSave}>
-                        <div style={card}>
-                            <h2
-                                style={{
-                                    fontSize: "0.9375rem",
-                                    fontWeight: 700,
-                                    color: "var(--text-primary)",
-                                    marginBottom: "0.25rem",
-                                }}
-                            >
+                        <div className="bg-surface border border-border rounded-lg shadow-sm p-6">
+                            <h2 className="text-[0.9375rem] font-bold text-fg mb-1">
                                 Email Report Settings
                             </h2>
-                            <p
-                                style={{
-                                    fontSize: "0.8125rem",
-                                    color: "var(--text-muted)",
-                                    marginBottom: "1.25rem",
-                                }}
-                            >
+                            <p className="text-[0.8125rem] text-fg-muted mb-5">
                                 Configure email delivery for daily, monthly, and annual reports.
                                 Uses{" "}
                                 <a
                                     href="https://resend.com"
                                     target="_blank"
                                     rel="noreferrer"
-                                    style={{ color: "var(--text-secondary)" }}
+                                    className="text-fg-secondary hover:underline"
                                 >
                                     Resend
                                 </a>{" "}
@@ -206,49 +104,43 @@ export default function EmailConfigPage() {
                             </p>
 
                             {/* Admin Email */}
-                            <div style={{ marginBottom: "1rem" }}>
-                                <label style={labelStyle}>Admin Email</label>
+                            <div className="mb-4">
+                                <label className="block text-xs font-semibold text-fg-secondary uppercase tracking-wider mb-1.5">
+                                    Admin Email
+                                </label>
                                 <input
                                     type="email"
                                     value={adminEmail}
                                     onChange={(e) => setAdminEmail(e.target.value)}
                                     placeholder="admin@example.com"
-                                    style={inputStyle}
+                                    className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-surface-secondary text-fg font-mono
+                                               outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-150"
                                 />
-                                <p
-                                    style={{
-                                        fontSize: "0.6875rem",
-                                        color: "var(--text-muted)",
-                                        marginTop: "0.25rem",
-                                    }}
-                                >
+                                <p className="text-[0.6875rem] text-fg-muted mt-1">
                                     Reports will be sent to this address.
                                 </p>
                             </div>
 
                             {/* Resend API Key */}
-                            <div style={{ marginBottom: "1rem" }}>
-                                <label style={labelStyle}>Resend API Key</label>
+                            <div className="mb-4">
+                                <label className="block text-xs font-semibold text-fg-secondary uppercase tracking-wider mb-1.5">
+                                    Resend API Key
+                                </label>
                                 <input
                                     type="text"
                                     value={resendKey}
                                     onChange={(e) => setResendKey(e.target.value)}
                                     placeholder="re_xxxxxxxx..."
-                                    style={inputStyle}
+                                    className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-surface-secondary text-fg font-mono
+                                               outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-150"
                                 />
-                                <p
-                                    style={{
-                                        fontSize: "0.6875rem",
-                                        color: "var(--text-muted)",
-                                        marginTop: "0.25rem",
-                                    }}
-                                >
+                                <p className="text-[0.6875rem] text-fg-muted mt-1">
                                     Get your API key from{" "}
                                     <a
                                         href="https://resend.com/api-keys"
                                         target="_blank"
                                         rel="noreferrer"
-                                        style={{ color: "var(--text-secondary)" }}
+                                        className="text-fg-secondary hover:underline"
                                     >
                                         resend.com/api-keys
                                     </a>
@@ -257,22 +149,19 @@ export default function EmailConfigPage() {
                             </div>
 
                             {/* From Email */}
-                            <div style={{ marginBottom: "1.25rem" }}>
-                                <label style={labelStyle}>From Email (Optional)</label>
+                            <div className="mb-5">
+                                <label className="block text-xs font-semibold text-fg-secondary uppercase tracking-wider mb-1.5">
+                                    From Email (Optional)
+                                </label>
                                 <input
                                     type="email"
                                     value={fromEmail}
                                     onChange={(e) => setFromEmail(e.target.value)}
                                     placeholder="onboarding@resend.dev"
-                                    style={inputStyle}
+                                    className="w-full px-3 py-2.5 text-sm border border-border rounded-lg bg-surface-secondary text-fg font-mono
+                                               outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-150"
                                 />
-                                <p
-                                    style={{
-                                        fontSize: "0.6875rem",
-                                        color: "var(--text-muted)",
-                                        marginTop: "0.25rem",
-                                    }}
-                                >
+                                <p className="text-[0.6875rem] text-fg-muted mt-1">
                                     Sender address. Defaults to Resend&apos;s sandbox if blank.
                                 </p>
                             </div>
@@ -280,25 +169,11 @@ export default function EmailConfigPage() {
                             {/* Status Message */}
                             {message && (
                                 <div
-                                    style={{
-                                        padding: "0.5rem 0.75rem",
-                                        borderRadius: "var(--radius)",
-                                        fontSize: "0.8125rem",
-                                        fontWeight: 500,
-                                        marginBottom: "1rem",
-                                        background:
-                                            message.type === "ok"
-                                                ? "var(--green-50, #F0FDF4)"
-                                                : "var(--red-50, #FEF2F2)",
-                                        color:
-                                            message.type === "ok"
-                                                ? "var(--green-600, #16A34A)"
-                                                : "var(--red-600)",
-                                        border: `1px solid ${message.type === "ok"
-                                                ? "var(--green-200, #BBF7D0)"
-                                                : "var(--red-200, #FECACA)"
-                                            }`,
-                                    }}
+                                    className={`px-3 py-2 rounded-lg text-[0.8125rem] font-medium mb-4 border
+                                        ${message.type === "ok"
+                                            ? "bg-green-50 text-green-600 border-green-500"
+                                            : "bg-red-50 text-red-600 border-red-500"
+                                        }`}
                                 >
                                     {message.text}
                                 </div>
@@ -307,43 +182,20 @@ export default function EmailConfigPage() {
                             <button
                                 type="submit"
                                 disabled={saving}
-                                style={{
-                                    ...btnPrimary,
-                                    opacity: saving ? 0.6 : 1,
-                                    width: "100%",
-                                }}
+                                className="w-full px-5 py-2.5 text-sm font-semibold text-fg-inverted bg-fg border-none rounded-lg
+                                           cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed
+                                           hover:opacity-90 active:scale-[0.98] transition-all duration-150"
                             >
                                 {saving ? "Saving..." : "Save Configuration"}
                             </button>
                         </div>
 
                         {/* Info Card */}
-                        <div
-                            style={{
-                                ...card,
-                                marginTop: "1rem",
-                                background: "var(--bg-secondary)",
-                            }}
-                        >
-                            <h3
-                                style={{
-                                    fontSize: "0.8125rem",
-                                    fontWeight: 600,
-                                    color: "var(--text-secondary)",
-                                    marginBottom: "0.5rem",
-                                }}
-                            >
+                        <div className="bg-surface-secondary border border-border rounded-lg shadow-sm p-6 mt-4">
+                            <h3 className="text-[0.8125rem] font-semibold text-fg-secondary mb-2">
                                 📬 How Reports Work
                             </h3>
-                            <ul
-                                style={{
-                                    fontSize: "0.75rem",
-                                    color: "var(--text-muted)",
-                                    lineHeight: 1.8,
-                                    paddingLeft: "1.25rem",
-                                    margin: 0,
-                                }}
-                            >
+                            <ul className="text-xs text-fg-muted leading-relaxed pl-5 m-0 space-y-1">
                                 <li>
                                     <strong>Daily report</strong> — triggered nightly via cron at 11 PM IST
                                 </li>

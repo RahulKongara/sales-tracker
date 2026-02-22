@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { PHARMACY_NAME } from "@/lib/constants";
 import { sendEmailWithRetry } from "@/lib/email-retry";
 import { getEmailConfig } from "@/lib/email-config";
+import { getISTDayBounds, toISTDateString } from "@/lib/utils";
 
 /**
  * POST /api/reports/daily — Daily sales summary email.
@@ -25,11 +26,8 @@ export async function POST(req: Request) {
     try {
         // Get today's IST bounds
         const now = new Date();
-        const todayStr = now.toLocaleDateString("en-CA", {
-            timeZone: "Asia/Kolkata",
-        });
-        const start = new Date(`${todayStr}T00:00:00.000+05:30`);
-        const end = new Date(`${todayStr}T23:59:59.999+05:30`);
+        const todayStr = toISTDateString(now);
+        const { start, end } = getISTDayBounds(now);
 
         // Aggregate today's data
         const [bills, aggregate] = await Promise.all([

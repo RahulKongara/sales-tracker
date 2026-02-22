@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
 import { formatIST, formatCurrency } from "@/lib/utils";
 import { PAYMENT_MODE_CONFIG } from "@/lib/constants";
 import type { PaymentMode } from "@/lib/constants";
@@ -78,46 +77,19 @@ interface Employee {
 }
 
 /* ────────────────────────────────────────────────────────────── */
-/*  Styles                                                       */
+/*  Shared classes                                               */
 /* ────────────────────────────────────────────────────────────── */
 
-const card: React.CSSProperties = {
-    background: "var(--bg-primary)",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius-lg)",
-    boxShadow: "var(--shadow-sm)",
-};
-
-const btnSecondary: React.CSSProperties = {
-    padding: "0.5rem 0.75rem",
-    fontSize: "0.8125rem",
-    fontWeight: 500,
-    color: "var(--text-secondary)",
-    background: "var(--bg-secondary)",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius)",
-    cursor: "pointer",
-};
-
-const btnSmall: React.CSSProperties = {
-    ...btnSecondary,
-    fontSize: "0.75rem",
-    padding: "0.375rem 0.75rem",
-};
-
-const inputStyle: React.CSSProperties = {
-    ...btnSecondary,
-    fontFamily: "var(--font-mono)",
-    fontSize: "0.8125rem",
-    minWidth: "120px",
-};
-
-const pillActive: React.CSSProperties = {
-    ...btnSmall,
-    background: "var(--text-primary)",
-    color: "var(--bg-primary)",
-    borderColor: "var(--text-primary)",
-};
+const CARD = "bg-surface border border-border rounded-lg shadow-sm";
+const BTN_SM =
+    "px-3 py-1.5 text-xs font-medium text-fg-secondary bg-surface-secondary border border-border rounded-lg cursor-pointer hover:bg-surface-tertiary hover:text-fg transition-colors duration-150";
+const BTN_SM_ACTIVE =
+    "px-3 py-1.5 text-xs font-medium text-surface bg-fg border border-fg rounded-lg cursor-pointer transition-colors duration-150";
+const INPUT_CLS =
+    "px-2 py-1.5 text-[0.8125rem] font-mono min-w-[120px] text-fg-secondary bg-surface-secondary border border-border rounded-lg cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-150";
+const TH_CLS =
+    "px-3 py-2.5 text-left font-semibold text-fg-secondary text-xs uppercase tracking-wider whitespace-nowrap";
+const TD_CLS = "px-3 py-2.5";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Component                                                    */
@@ -232,69 +204,12 @@ export default function ActivityLogPage() {
     const paymentModes: PaymentMode[] = ["CASH", "CARD", "PAYTM"];
 
     return (
-        <div style={{ minHeight: "100vh", background: "var(--bg-secondary)" }}>
-            {/* ── Header ──────────────────────────────────────── */}
-            <header
-                style={{
-                    background: "var(--bg-primary)",
-                    borderBottom: "1px solid var(--border-default)",
-                    padding: "0.75rem 1.5rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                }}
-            >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <span style={{ fontSize: "1.25rem" }}>📋</span>
-                    <h1
-                        style={{
-                            fontSize: "1rem",
-                            fontWeight: 600,
-                            color: "var(--text-primary)",
-                            letterSpacing: "-0.01em",
-                        }}
-                    >
-                        Activity Log
-                    </h1>
-                </div>
-                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                    <button onClick={() => router.push("/admin/dashboard")} style={btnSmall}>
-                        ← Dashboard
-                    </button>
-                    <button onClick={() => router.push("/admin/analytics")} style={btnSmall}>
-                        📈 Analytics
-                    </button>
-                    <button onClick={() => router.push("/admin/users")} style={btnSmall}>
-                        👥 Users
-                    </button>
-                    <button onClick={() => signOut({ callbackUrl: "/login" })} style={btnSmall}>
-                        Sign Out
-                    </button>
-                </div>
-            </header>
+        <div className="min-h-screen bg-surface-secondary">
 
-            <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "1.5rem" }}>
+            <div className="max-w-[1100px] mx-auto p-6">
                 {/* ── Filter Bar ───────────────────────────────── */}
-                <div
-                    style={{
-                        ...card,
-                        padding: "1rem 1.25rem",
-                        marginBottom: "1rem",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.75rem",
-                        flexWrap: "wrap",
-                    }}
-                >
-                    <span
-                        style={{
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            color: "var(--text-secondary)",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.05em",
-                        }}
-                    >
+                <div className={`${CARD} px-5 py-4 mb-4 flex items-center gap-3 flex-wrap`}>
+                    <span className="text-xs font-semibold text-fg-secondary uppercase tracking-wider">
                         Filters:
                     </span>
 
@@ -302,7 +217,7 @@ export default function ActivityLogPage() {
                     <select
                         value={filterEmployee}
                         onChange={(e) => setFilterEmployee(e.target.value)}
-                        style={inputStyle}
+                        className={INPUT_CLS}
                     >
                         <option value="">All Employees</option>
                         {employees.map((emp) => (
@@ -313,10 +228,10 @@ export default function ActivityLogPage() {
                     </select>
 
                     {/* Payment Mode Pills */}
-                    <div style={{ display: "flex", gap: "0.25rem" }}>
+                    <div className="flex gap-1">
                         <button
                             onClick={() => setFilterPayment("")}
-                            style={filterPayment === "" ? pillActive : btnSmall}
+                            className={filterPayment === "" ? BTN_SM_ACTIVE : BTN_SM}
                         >
                             All
                         </button>
@@ -326,7 +241,7 @@ export default function ActivityLogPage() {
                                 onClick={() =>
                                     setFilterPayment(filterPayment === mode ? "" : mode)
                                 }
-                                style={filterPayment === mode ? pillActive : btnSmall}
+                                className={filterPayment === mode ? BTN_SM_ACTIVE : BTN_SM}
                             >
                                 {PAYMENT_MODE_CONFIG[mode].label}
                             </button>
@@ -338,26 +253,22 @@ export default function ActivityLogPage() {
                         type="date"
                         value={filterFrom}
                         onChange={(e) => setFilterFrom(e.target.value)}
-                        style={inputStyle}
+                        className={INPUT_CLS}
                         placeholder="From"
                     />
-                    <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>to</span>
+                    <span className="text-fg-muted text-xs">to</span>
                     <input
                         type="date"
                         value={filterTo}
                         onChange={(e) => setFilterTo(e.target.value)}
-                        style={inputStyle}
+                        className={INPUT_CLS}
                         placeholder="To"
                     />
 
                     {hasFilters && (
                         <button
                             onClick={clearFilters}
-                            style={{
-                                ...btnSmall,
-                                color: "var(--red-600)",
-                                borderColor: "var(--red-200, #FECACA)",
-                            }}
+                            className={`${BTN_SM} text-red-600 border-red-200`}
                         >
                             ✕ Clear
                         </button>
@@ -365,7 +276,7 @@ export default function ActivityLogPage() {
                 </div>
 
                 {/* ── Tabs ─────────────────────────────────────── */}
-                <div style={{ display: "flex", gap: "0.25rem", marginBottom: "1rem" }}>
+                <div className="flex gap-1 mb-4">
                     {([
                         { key: "bills", label: `Bills (${pagination?.total || 0})` },
                         { key: "summary", label: `Employee Summary (${employeeSummary.length})` },
@@ -374,7 +285,7 @@ export default function ActivityLogPage() {
                         <button
                             key={key}
                             onClick={() => setTab(key)}
-                            style={tab === key ? pillActive : btnSmall}
+                            className={tab === key ? BTN_SM_ACTIVE : BTN_SM}
                         >
                             {label}
                         </button>
@@ -383,59 +294,28 @@ export default function ActivityLogPage() {
 
                 {/* ── Content ──────────────────────────────────── */}
                 {loading ? (
-                    <div
-                        style={{
-                            ...card,
-                            padding: "3rem",
-                            textAlign: "center",
-                            color: "var(--text-muted)",
-                        }}
-                    >
+                    <div className={`${CARD} p-12 text-center text-fg-muted`}>
                         Loading...
                     </div>
                 ) : error ? (
-                    <div
-                        style={{
-                            ...card,
-                            padding: "3rem",
-                            textAlign: "center",
-                            color: "var(--red-600)",
-                        }}
-                    >
+                    <div className={`${CARD} p-12 text-center text-red-600`}>
                         {error}
                     </div>
                 ) : (
                     <>
                         {/* ─── Bills Tab ─────────────────────────── */}
                         {tab === "bills" && (
-                            <div style={{ ...card, overflow: "hidden" }}>
+                            <div className={`${CARD} overflow-hidden`}>
                                 {bills.length === 0 ? (
-                                    <div
-                                        style={{
-                                            padding: "3rem",
-                                            textAlign: "center",
-                                            color: "var(--text-muted)",
-                                        }}
-                                    >
+                                    <div className="p-12 text-center text-fg-muted">
                                         No bills match the current filters.
                                     </div>
                                 ) : (
                                     <>
-                                        <div style={{ overflowX: "auto" }}>
-                                            <table
-                                                style={{
-                                                    width: "100%",
-                                                    borderCollapse: "collapse",
-                                                    fontSize: "0.8125rem",
-                                                }}
-                                            >
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full border-collapse text-[0.8125rem]">
                                                 <thead>
-                                                    <tr
-                                                        style={{
-                                                            borderBottom:
-                                                                "1px solid var(--border-default)",
-                                                        }}
-                                                    >
+                                                    <tr className="border-b border-border">
                                                         {[
                                                             "Bill #",
                                                             "Date/Time",
@@ -445,19 +325,7 @@ export default function ActivityLogPage() {
                                                             "Items",
                                                             "Total",
                                                         ].map((h) => (
-                                                            <th
-                                                                key={h}
-                                                                style={{
-                                                                    padding: "0.625rem 0.75rem",
-                                                                    textAlign: "left",
-                                                                    fontWeight: 600,
-                                                                    color: "var(--text-secondary)",
-                                                                    fontSize: "0.75rem",
-                                                                    textTransform: "uppercase",
-                                                                    letterSpacing: "0.05em",
-                                                                    whiteSpace: "nowrap",
-                                                                }}
-                                                            >
+                                                            <th key={h} className={TH_CLS}>
                                                                 {h}
                                                             </th>
                                                         ))}
@@ -475,113 +343,46 @@ export default function ActivityLogPage() {
                                                                 onClick={() =>
                                                                     openBillDetail(bill.id)
                                                                 }
-                                                                style={{
-                                                                    borderBottom:
-                                                                        "1px solid var(--border-light)",
-                                                                    cursor: "pointer",
-                                                                    transition:
-                                                                        "background 0.1s",
-                                                                }}
-                                                                onMouseEnter={(e) =>
-                                                                (e.currentTarget.style.background =
-                                                                    "var(--bg-secondary)")
-                                                                }
-                                                                onMouseLeave={(e) =>
-                                                                (e.currentTarget.style.background =
-                                                                    "transparent")
-                                                                }
+                                                                className="border-b border-border last:border-b-0
+                                                                           cursor-pointer hover:bg-surface-secondary
+                                                                           transition-colors duration-100"
                                                             >
-                                                                <td
-                                                                    style={{
-                                                                        padding:
-                                                                            "0.625rem 0.75rem",
-                                                                        fontFamily:
-                                                                            "var(--font-mono)",
-                                                                        fontWeight: 600,
-                                                                        color: "var(--text-primary)",
-                                                                        whiteSpace: "nowrap",
-                                                                    }}
-                                                                >
+                                                                <td className={`${TD_CLS} font-mono font-semibold text-fg whitespace-nowrap`}>
                                                                     {bill.billNumber}
                                                                 </td>
-                                                                <td
-                                                                    style={{
-                                                                        padding:
-                                                                            "0.625rem 0.75rem",
-                                                                        color: "var(--text-secondary)",
-                                                                        whiteSpace: "nowrap",
-                                                                        fontSize: "0.75rem",
-                                                                    }}
-                                                                >
+                                                                <td className={`${TD_CLS} text-fg-secondary whitespace-nowrap text-xs`}>
                                                                     {formatIST(
                                                                         new Date(bill.createdAt)
                                                                     )}
                                                                 </td>
-                                                                <td
-                                                                    style={{
-                                                                        padding:
-                                                                            "0.625rem 0.75rem",
-                                                                        color: "var(--text-secondary)",
-                                                                    }}
-                                                                >
+                                                                <td className={`${TD_CLS} text-fg-secondary`}>
                                                                     {bill.createdByName}
                                                                 </td>
-                                                                <td
-                                                                    style={{
-                                                                        padding:
-                                                                            "0.625rem 0.75rem",
-                                                                    }}
-                                                                >
+                                                                <td className={TD_CLS}>
                                                                     <span
+                                                                        className="px-2 py-0.5 rounded text-[0.6875rem] font-semibold"
                                                                         style={{
-                                                                            padding:
-                                                                                "0.125rem 0.5rem",
-                                                                            borderRadius:
-                                                                                "var(--radius-sm)",
                                                                             background:
                                                                                 mc?.lightBg ||
                                                                                 "#f3f4f6",
                                                                             color:
                                                                                 mc?.color ||
                                                                                 "#374151",
-                                                                            fontSize:
-                                                                                "0.6875rem",
-                                                                            fontWeight: 600,
                                                                         }}
                                                                     >
                                                                         {mc?.label ||
                                                                             bill.paymentMode}
                                                                     </span>
                                                                 </td>
-                                                                <td
-                                                                    style={{
-                                                                        padding:
-                                                                            "0.625rem 0.75rem",
-                                                                        color: "var(--text-secondary)",
-                                                                    }}
-                                                                >
+                                                                <td className={`${TD_CLS} text-fg-secondary`}>
                                                                     {bill.hasPrescription
                                                                         ? "📋"
                                                                         : "—"}
                                                                 </td>
-                                                                <td
-                                                                    style={{
-                                                                        padding:
-                                                                            "0.625rem 0.75rem",
-                                                                        color: "var(--text-secondary)",
-                                                                    }}
-                                                                >
+                                                                <td className={`${TD_CLS} text-fg-secondary tabular-nums`}>
                                                                     {bill.itemCount}
                                                                 </td>
-                                                                <td
-                                                                    style={{
-                                                                        padding:
-                                                                            "0.625rem 0.75rem",
-                                                                        fontWeight: 600,
-                                                                        color: "var(--text-primary)",
-                                                                        whiteSpace: "nowrap",
-                                                                    }}
-                                                                >
+                                                                <td className={`${TD_CLS} font-semibold text-fg whitespace-nowrap tabular-nums`}>
                                                                     {formatCurrency(
                                                                         bill.grandTotal
                                                                     )}
@@ -595,35 +396,17 @@ export default function ActivityLogPage() {
 
                                         {/* Pagination */}
                                         {pagination && pagination.totalPages > 1 && (
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    justifyContent: "center",
-                                                    alignItems: "center",
-                                                    gap: "0.75rem",
-                                                    padding: "1rem",
-                                                    borderTop:
-                                                        "1px solid var(--border-default)",
-                                                }}
-                                            >
+                                            <div className="flex justify-center items-center gap-3 p-4 border-t border-border">
                                                 <button
                                                     onClick={() =>
                                                         setPage((p) => Math.max(1, p - 1))
                                                     }
                                                     disabled={page <= 1}
-                                                    style={{
-                                                        ...btnSmall,
-                                                        opacity: page <= 1 ? 0.5 : 1,
-                                                    }}
+                                                    className={`${BTN_SM} ${page <= 1 ? "opacity-50 cursor-not-allowed" : ""}`}
                                                 >
                                                     ← Prev
                                                 </button>
-                                                <span
-                                                    style={{
-                                                        fontSize: "0.8125rem",
-                                                        color: "var(--text-secondary)",
-                                                    }}
-                                                >
+                                                <span className="text-[0.8125rem] text-fg-secondary">
                                                     Page {page} of {pagination.totalPages}
                                                 </span>
                                                 <button
@@ -636,13 +419,7 @@ export default function ActivityLogPage() {
                                                         )
                                                     }
                                                     disabled={page >= pagination.totalPages}
-                                                    style={{
-                                                        ...btnSmall,
-                                                        opacity:
-                                                            page >= pagination.totalPages
-                                                                ? 0.5
-                                                                : 1,
-                                                    }}
+                                                    className={`${BTN_SM} ${page >= pagination.totalPages ? "opacity-50 cursor-not-allowed" : ""}`}
                                                 >
                                                     Next →
                                                 </button>
@@ -655,46 +432,18 @@ export default function ActivityLogPage() {
 
                         {/* ─── Employee Summary Tab ──────────────── */}
                         {tab === "summary" && (
-                            <div style={{ ...card, overflow: "hidden" }}>
+                            <div className={`${CARD} overflow-hidden`}>
                                 {employeeSummary.length === 0 ? (
-                                    <div
-                                        style={{
-                                            padding: "3rem",
-                                            textAlign: "center",
-                                            color: "var(--text-muted)",
-                                        }}
-                                    >
+                                    <div className="p-12 text-center text-fg-muted">
                                         No data for the current filters.
                                     </div>
                                 ) : (
-                                    <table
-                                        style={{
-                                            width: "100%",
-                                            borderCollapse: "collapse",
-                                            fontSize: "0.8125rem",
-                                        }}
-                                    >
+                                    <table className="w-full border-collapse text-[0.8125rem]">
                                         <thead>
-                                            <tr
-                                                style={{
-                                                    borderBottom:
-                                                        "1px solid var(--border-default)",
-                                                }}
-                                            >
+                                            <tr className="border-b border-border">
                                                 {["Employee", "Username", "Bills", "Revenue"].map(
                                                     (h) => (
-                                                        <th
-                                                            key={h}
-                                                            style={{
-                                                                padding: "0.625rem 0.75rem",
-                                                                textAlign: "left",
-                                                                fontWeight: 600,
-                                                                color: "var(--text-secondary)",
-                                                                fontSize: "0.75rem",
-                                                                textTransform: "uppercase",
-                                                                letterSpacing: "0.05em",
-                                                            }}
-                                                        >
+                                                        <th key={h} className={TH_CLS}>
                                                             {h}
                                                         </th>
                                                     )
@@ -705,44 +454,18 @@ export default function ActivityLogPage() {
                                             {employeeSummary.map((emp) => (
                                                 <tr
                                                     key={emp.employeeId}
-                                                    style={{
-                                                        borderBottom:
-                                                            "1px solid var(--border-light)",
-                                                    }}
+                                                    className="border-b border-border last:border-b-0"
                                                 >
-                                                    <td
-                                                        style={{
-                                                            padding: "0.625rem 0.75rem",
-                                                            fontWeight: 600,
-                                                            color: "var(--text-primary)",
-                                                        }}
-                                                    >
+                                                    <td className={`${TD_CLS} font-semibold text-fg`}>
                                                         {emp.employeeName}
                                                     </td>
-                                                    <td
-                                                        style={{
-                                                            padding: "0.625rem 0.75rem",
-                                                            color: "var(--text-muted)",
-                                                            fontFamily: "var(--font-mono)",
-                                                        }}
-                                                    >
+                                                    <td className={`${TD_CLS} text-fg-muted font-mono`}>
                                                         {emp.employeeUser}
                                                     </td>
-                                                    <td
-                                                        style={{
-                                                            padding: "0.625rem 0.75rem",
-                                                            color: "var(--text-secondary)",
-                                                        }}
-                                                    >
+                                                    <td className={`${TD_CLS} text-fg-secondary tabular-nums`}>
                                                         {emp.billCount}
                                                     </td>
-                                                    <td
-                                                        style={{
-                                                            padding: "0.625rem 0.75rem",
-                                                            fontWeight: 600,
-                                                            color: "var(--text-primary)",
-                                                        }}
-                                                    >
+                                                    <td className={`${TD_CLS} font-semibold text-fg tabular-nums`}>
                                                         {formatCurrency(emp.totalRevenue)}
                                                     </td>
                                                 </tr>
@@ -755,46 +478,18 @@ export default function ActivityLogPage() {
 
                         {/* ─── Audit Log Tab ────────────────────── */}
                         {tab === "audit" && (
-                            <div style={{ ...card, overflow: "hidden" }}>
+                            <div className={`${CARD} overflow-hidden`}>
                                 {auditLogs.length === 0 ? (
-                                    <div
-                                        style={{
-                                            padding: "3rem",
-                                            textAlign: "center",
-                                            color: "var(--text-muted)",
-                                        }}
-                                    >
+                                    <div className="p-12 text-center text-fg-muted">
                                         No audit entries yet.
                                     </div>
                                 ) : (
-                                    <table
-                                        style={{
-                                            width: "100%",
-                                            borderCollapse: "collapse",
-                                            fontSize: "0.8125rem",
-                                        }}
-                                    >
+                                    <table className="w-full border-collapse text-[0.8125rem]">
                                         <thead>
-                                            <tr
-                                                style={{
-                                                    borderBottom:
-                                                        "1px solid var(--border-default)",
-                                                }}
-                                            >
+                                            <tr className="border-b border-border">
                                                 {["Action", "Bill", "By", "Notes", "Time"].map(
                                                     (h) => (
-                                                        <th
-                                                            key={h}
-                                                            style={{
-                                                                padding: "0.625rem 0.75rem",
-                                                                textAlign: "left",
-                                                                fontWeight: 600,
-                                                                color: "var(--text-secondary)",
-                                                                fontSize: "0.75rem",
-                                                                textTransform: "uppercase",
-                                                                letterSpacing: "0.05em",
-                                                            }}
-                                                        >
+                                                        <th key={h} className={TH_CLS}>
                                                             {h}
                                                         </th>
                                                     )
@@ -811,69 +506,29 @@ export default function ActivityLogPage() {
                                                 return (
                                                     <tr
                                                         key={log.id}
-                                                        style={{
-                                                            borderBottom:
-                                                                "1px solid var(--border-light)",
-                                                        }}
+                                                        className="border-b border-border last:border-b-0"
                                                     >
-                                                        <td
-                                                            style={{
-                                                                padding: "0.625rem 0.75rem",
-                                                            }}
-                                                        >
+                                                        <td className={TD_CLS}>
                                                             <span
+                                                                className="px-2 py-0.5 rounded text-[0.6875rem] font-semibold"
                                                                 style={{
-                                                                    padding: "0.125rem 0.5rem",
-                                                                    borderRadius:
-                                                                        "var(--radius-sm)",
                                                                     background: a.bg,
                                                                     color: a.color,
-                                                                    fontSize: "0.6875rem",
-                                                                    fontWeight: 600,
                                                                 }}
                                                             >
                                                                 {a.text}
                                                             </span>
                                                         </td>
-                                                        <td
-                                                            style={{
-                                                                padding: "0.625rem 0.75rem",
-                                                                fontFamily: "var(--font-mono)",
-                                                                fontWeight: 600,
-                                                                color: "var(--text-primary)",
-                                                            }}
-                                                        >
+                                                        <td className={`${TD_CLS} font-mono font-semibold text-fg`}>
                                                             {log.billNumber}
                                                         </td>
-                                                        <td
-                                                            style={{
-                                                                padding: "0.625rem 0.75rem",
-                                                                color: "var(--text-secondary)",
-                                                            }}
-                                                        >
+                                                        <td className={`${TD_CLS} text-fg-secondary`}>
                                                             {log.performedBy}
                                                         </td>
-                                                        <td
-                                                            style={{
-                                                                padding: "0.625rem 0.75rem",
-                                                                color: "var(--text-muted)",
-                                                                fontSize: "0.75rem",
-                                                                maxWidth: "250px",
-                                                                overflow: "hidden",
-                                                                textOverflow: "ellipsis",
-                                                                whiteSpace: "nowrap",
-                                                            }}
-                                                        >
+                                                        <td className={`${TD_CLS} text-fg-muted text-xs max-w-[250px] overflow-hidden text-ellipsis whitespace-nowrap`}>
                                                             {log.notes || "—"}
                                                         </td>
-                                                        <td
-                                                            style={{
-                                                                padding: "0.625rem 0.75rem",
-                                                                fontSize: "0.75rem",
-                                                                color: "var(--text-muted)",
-                                                                whiteSpace: "nowrap",
-                                                            }}
-                                                        >
+                                                        <td className={`${TD_CLS} text-xs text-fg-muted whitespace-nowrap`}>
                                                             {formatIST(
                                                                 new Date(log.timestamp)
                                                             )}
@@ -893,109 +548,63 @@ export default function ActivityLogPage() {
             {/* ── Bill Detail Modal ────────────────────────── */}
             {(selectedBill || detailLoading) && (
                 <div
-                    style={{
-                        position: "fixed",
-                        inset: 0,
-                        background: "rgba(0,0,0,0.5)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        zIndex: 1000,
-                        padding: "1rem",
-                    }}
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4"
                     onClick={() => setSelectedBill(null)}
                 >
                     <div
-                        style={{
-                            ...card,
-                            maxWidth: "600px",
-                            width: "100%",
-                            maxHeight: "85vh",
-                            overflow: "auto",
-                            padding: "1.5rem",
-                        }}
+                        className={`${CARD} max-w-[600px] w-full max-h-[85vh] overflow-auto p-6`}
                         onClick={(e) => e.stopPropagation()}
                     >
                         {detailLoading ? (
-                            <div
-                                style={{
-                                    textAlign: "center",
-                                    color: "var(--text-muted)",
-                                    padding: "2rem",
-                                }}
-                            >
+                            <div className="text-center text-fg-muted p-8">
                                 Loading bill details...
                             </div>
                         ) : selectedBill ? (
                             <>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                        marginBottom: "1rem",
-                                    }}
-                                >
-                                    <h3
-                                        style={{
-                                            fontSize: "1rem",
-                                            fontWeight: 700,
-                                            color: "var(--text-primary)",
-                                        }}
-                                    >
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3 className="text-base font-bold text-fg">
                                         Bill #{selectedBill.billNumber}
                                     </h3>
                                     <button
                                         onClick={() => setSelectedBill(null)}
-                                        style={{
-                                            ...btnSmall,
-                                            fontSize: "0.875rem",
-                                        }}
+                                        className={`${BTN_SM} text-sm`}
                                     >
                                         ✕
                                     </button>
                                 </div>
 
                                 {/* Meta Info */}
-                                <div
-                                    style={{
-                                        display: "grid",
-                                        gridTemplateColumns: "1fr 1fr",
-                                        gap: "0.5rem",
-                                        marginBottom: "1rem",
-                                        fontSize: "0.8125rem",
-                                    }}
-                                >
+                                <div className="grid grid-cols-2 gap-2 mb-4 text-[0.8125rem]">
                                     <div>
-                                        <span style={{ color: "var(--text-muted)" }}>Date: </span>
-                                        <span style={{ color: "var(--text-primary)" }}>
+                                        <span className="text-fg-muted">Date: </span>
+                                        <span className="text-fg">
                                             {formatIST(new Date(selectedBill.createdAt))}
                                         </span>
                                     </div>
                                     <div>
-                                        <span style={{ color: "var(--text-muted)" }}>By: </span>
-                                        <span style={{ color: "var(--text-primary)" }}>
+                                        <span className="text-fg-muted">By: </span>
+                                        <span className="text-fg">
                                             {selectedBill.createdByName}
                                         </span>
                                     </div>
                                     <div>
-                                        <span style={{ color: "var(--text-muted)" }}>Payment: </span>
-                                        <span style={{ fontWeight: 600 }}>
+                                        <span className="text-fg-muted">Payment: </span>
+                                        <span className="font-semibold">
                                             {PAYMENT_MODE_CONFIG[selectedBill.paymentMode as PaymentMode]?.label || selectedBill.paymentMode}
                                         </span>
                                     </div>
                                     <div>
-                                        <span style={{ color: "var(--text-muted)" }}>Prescription: </span>
-                                        <span style={{ fontWeight: 600 }}>
+                                        <span className="text-fg-muted">Prescription: </span>
+                                        <span className="font-semibold">
                                             {selectedBill.hasPrescription ? "Yes" : "No"}
                                         </span>
                                     </div>
                                     {selectedBill.customerName && (
-                                        <div style={{ gridColumn: "1/3" }}>
-                                            <span style={{ color: "var(--text-muted)" }}>
+                                        <div className="col-span-2">
+                                            <span className="text-fg-muted">
                                                 Customer:{" "}
                                             </span>
-                                            <span style={{ color: "var(--text-primary)" }}>
+                                            <span className="text-fg">
                                                 {selectedBill.customerName}
                                             </span>
                                         </div>
@@ -1003,31 +612,13 @@ export default function ActivityLogPage() {
                                 </div>
 
                                 {/* Line Items */}
-                                <table
-                                    style={{
-                                        width: "100%",
-                                        borderCollapse: "collapse",
-                                        fontSize: "0.8125rem",
-                                        marginBottom: "1rem",
-                                    }}
-                                >
+                                <table className="w-full border-collapse text-[0.8125rem] mb-4">
                                     <thead>
-                                        <tr
-                                            style={{
-                                                borderBottom: "1px solid var(--border-default)",
-                                            }}
-                                        >
+                                        <tr className="border-b border-border">
                                             {["Medicine", "Qty", "Rate", "Subtotal"].map((h) => (
                                                 <th
                                                     key={h}
-                                                    style={{
-                                                        padding: "0.5rem 0.625rem",
-                                                        textAlign: "left",
-                                                        fontWeight: 600,
-                                                        color: "var(--text-secondary)",
-                                                        fontSize: "0.6875rem",
-                                                        textTransform: "uppercase",
-                                                    }}
+                                                    className="px-2.5 py-2 text-left font-semibold text-fg-secondary text-[0.6875rem] uppercase"
                                                 >
                                                     {h}
                                                 </th>
@@ -1038,41 +629,18 @@ export default function ActivityLogPage() {
                                         {selectedBill.lineItems.map((li, i) => (
                                             <tr
                                                 key={i}
-                                                style={{
-                                                    borderBottom: "1px solid var(--border-light)",
-                                                }}
+                                                className="border-b border-border last:border-b-0"
                                             >
-                                                <td
-                                                    style={{
-                                                        padding: "0.5rem 0.625rem",
-                                                        color: "var(--text-primary)",
-                                                    }}
-                                                >
+                                                <td className="px-2.5 py-2 text-fg">
                                                     {li.medicineName}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        padding: "0.5rem 0.625rem",
-                                                        color: "var(--text-secondary)",
-                                                    }}
-                                                >
+                                                <td className="px-2.5 py-2 text-fg-secondary tabular-nums">
                                                     {li.quantity}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        padding: "0.5rem 0.625rem",
-                                                        color: "var(--text-secondary)",
-                                                    }}
-                                                >
+                                                <td className="px-2.5 py-2 text-fg-secondary tabular-nums">
                                                     {formatCurrency(li.costPerPiece)}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        padding: "0.5rem 0.625rem",
-                                                        fontWeight: 600,
-                                                        color: "var(--text-primary)",
-                                                    }}
-                                                >
+                                                <td className="px-2.5 py-2 font-semibold text-fg tabular-nums">
                                                     {formatCurrency(li.subtotal)}
                                                 </td>
                                             </tr>
@@ -1081,56 +649,28 @@ export default function ActivityLogPage() {
                                 </table>
 
                                 {/* Totals */}
-                                <div
-                                    style={{
-                                        borderTop: "2px solid var(--border-default)",
-                                        paddingTop: "0.75rem",
-                                        fontSize: "0.8125rem",
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            marginBottom: "0.25rem",
-                                        }}
-                                    >
-                                        <span style={{ color: "var(--text-secondary)" }}>
+                                <div className="border-t-2 border-border pt-3 text-[0.8125rem]">
+                                    <div className="flex justify-between mb-1">
+                                        <span className="text-fg-secondary">
                                             Medicines Subtotal
                                         </span>
-                                        <span style={{ color: "var(--text-primary)" }}>
+                                        <span className="text-fg tabular-nums">
                                             {formatCurrency(selectedBill.medicinesSubtotal)}
                                         </span>
                                     </div>
                                     {selectedBill.hasPrescription && (
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                marginBottom: "0.25rem",
-                                            }}
-                                        >
-                                            <span style={{ color: "var(--text-secondary)" }}>
+                                        <div className="flex justify-between mb-1">
+                                            <span className="text-fg-secondary">
                                                 Prescription Charge
                                             </span>
-                                            <span style={{ color: "var(--text-primary)" }}>
+                                            <span className="text-fg tabular-nums">
                                                 {formatCurrency(selectedBill.prescriptionCharge)}
                                             </span>
                                         </div>
                                     )}
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            fontWeight: 700,
-                                            fontSize: "1rem",
-                                            marginTop: "0.5rem",
-                                            paddingTop: "0.5rem",
-                                            borderTop: "1px solid var(--border-default)",
-                                        }}
-                                    >
+                                    <div className="flex justify-between font-bold text-base mt-2 pt-2 border-t border-border">
                                         <span>Grand Total</span>
-                                        <span style={{ color: "var(--text-primary)" }}>
+                                        <span className="text-fg tabular-nums">
                                             {formatCurrency(selectedBill.grandTotal)}
                                         </span>
                                     </div>

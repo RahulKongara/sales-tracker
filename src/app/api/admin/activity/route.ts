@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { parseISTDateParam } from "@/lib/utils";
 
 /**
  * GET /api/admin/activity?page=1&limit=50&employee=&paymentMode=&from=&to=
@@ -39,13 +40,13 @@ export async function GET(req: NextRequest) {
             where.paymentMode = paymentMode as "CASH" | "CARD" | "PAYTM";
         }
 
-        // Date range filter
-        const from = sp.get("from");
-        const to = sp.get("to");
-        if (from || to) {
+        // Date range filter (only apply if valid YYYY-MM-DD)
+        const parsedFrom = parseISTDateParam(sp.get("from"));
+        const parsedTo = parseISTDateParam(sp.get("to"));
+        if (parsedFrom || parsedTo) {
             where.createdAt = {};
-            if (from) where.createdAt.gte = new Date(`${from}T00:00:00.000+05:30`);
-            if (to) where.createdAt.lte = new Date(`${to}T23:59:59.999+05:30`);
+            if (parsedFrom) where.createdAt.gte = parsedFrom.start;
+            if (parsedTo) where.createdAt.lte = parsedTo.end;
         }
 
         // Fetch bills + total count in parallel

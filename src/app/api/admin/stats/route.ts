@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getISTDayBounds } from "@/lib/utils";
+import { getISTDayBounds, parseISTDateParam, toISTDateString } from "@/lib/utils";
 
 /**
  * GET /api/admin/stats?date=YYYY-MM-DD
@@ -19,14 +19,9 @@ export async function GET(req: NextRequest) {
     try {
         // Accept optional date param (YYYY-MM-DD), default to today IST
         const dateParam = req.nextUrl.searchParams.get("date");
-        const isValidDate = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam);
+        const parsed = parseISTDateParam(dateParam);
 
-        const { start, end } = isValidDate
-            ? {
-                start: new Date(`${dateParam}T00:00:00.000+05:30`),
-                end: new Date(`${dateParam}T23:59:59.999+05:30`),
-            }
-            : getISTDayBounds();
+        const { start, end } = parsed ?? getISTDayBounds();
 
         const where = {
             createdAt: { gte: start, lte: end },
@@ -78,7 +73,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json({
             ...totals,
-            date: dateParam || start.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }),
+            date: dateParam || toISTDateString(start),
             bills: bills.map((b) => ({
                 id: b.id,
                 billNumber: b.billNumber,

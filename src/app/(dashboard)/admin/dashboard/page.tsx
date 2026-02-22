@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
-import { formatCurrency, formatISTTime } from "@/lib/utils";
+import Link from "next/link";
+import { formatCurrency, formatISTTime, toISTDateString } from "@/lib/utils";
 import { PAYMENT_MODE_CONFIG } from "@/lib/constants";
 import type { PaymentMode } from "@/lib/constants";
 
@@ -37,46 +37,12 @@ interface DashboardStats {
 }
 
 /* ────────────────────────────────────────────────────────────── */
-/*  Styles                                                       */
-/* ────────────────────────────────────────────────────────────── */
-
-const card: React.CSSProperties = {
-    background: "var(--bg-primary)",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius-lg)",
-    boxShadow: "var(--shadow-sm)",
-};
-
-const btnDanger: React.CSSProperties = {
-    padding: "0.375rem 0.625rem",
-    fontSize: "0.75rem",
-    fontWeight: 500,
-    color: "var(--red-600)",
-    background: "var(--red-50)",
-    border: "1px solid var(--red-200, #FECACA)",
-    borderRadius: "var(--radius)",
-    cursor: "pointer",
-    transition: "all 0.15s ease",
-};
-
-const btnSecondary: React.CSSProperties = {
-    padding: "0.5rem 0.75rem",
-    fontSize: "0.8125rem",
-    fontWeight: 500,
-    color: "var(--text-secondary)",
-    background: "var(--bg-secondary)",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius)",
-    cursor: "pointer",
-};
-
-/* ────────────────────────────────────────────────────────────── */
 /*  Component                                                    */
 /* ────────────────────────────────────────────────────────────── */
 
 // Helper: today's date in IST as YYYY-MM-DD
 function todayIST() {
-    return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+    return toISTDateString();
 }
 
 export default function AdminDashboard() {
@@ -138,17 +104,7 @@ export default function AdminDashboard() {
 
     if (loading) {
         return (
-            <div
-                style={{
-                    minHeight: "100vh",
-                    background: "var(--bg-secondary)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "var(--text-muted)",
-                    fontSize: "0.875rem",
-                }}
-            >
+            <div className="min-h-screen bg-surface-secondary flex items-center justify-center text-fg-muted text-sm">
                 Loading dashboard...
             </div>
         );
@@ -156,17 +112,7 @@ export default function AdminDashboard() {
 
     if (error) {
         return (
-            <div
-                style={{
-                    minHeight: "100vh",
-                    background: "var(--bg-secondary)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "var(--red-600)",
-                    fontSize: "0.875rem",
-                }}
-            >
+            <div className="min-h-screen bg-surface-secondary flex items-center justify-center text-red-600 text-sm">
                 {error}
             </div>
         );
@@ -175,114 +121,14 @@ export default function AdminDashboard() {
     const paymentModes: PaymentMode[] = ["CASH", "CARD", "PAYTM"];
 
     return (
-        <div style={{ minHeight: "100vh", background: "var(--bg-secondary)" }}>
-            {/* ── Header ──────────────────────────────────────────── */}
-            <header
-                style={{
-                    background: "var(--bg-primary)",
-                    borderBottom: "1px solid var(--border-default)",
-                    padding: "0.75rem 1.5rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                }}
-            >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <span style={{ fontSize: "1.25rem" }}>📊</span>
-                    <h1
-                        style={{
-                            fontSize: "1rem",
-                            fontWeight: 600,
-                            color: "var(--text-primary)",
-                            letterSpacing: "-0.01em",
-                        }}
-                    >
-                        Admin Dashboard
-                    </h1>
-                </div>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button
-                        onClick={() => router.push("/bills/new")}
-                        style={{
-                            ...btnSecondary,
-                            fontSize: "0.75rem",
-                            padding: "0.375rem 0.75rem",
-                        }}
-                    >
-                        + New Bill
-                    </button>
-                    <button
-                        onClick={() => router.push("/admin/analytics")}
-                        style={{
-                            ...btnSecondary,
-                            fontSize: "0.75rem",
-                            padding: "0.375rem 0.75rem",
-                        }}
-                    >
-                        📈 Analytics
-                    </button>
-                    <button
-                        onClick={() => router.push("/admin/activity")}
-                        style={{
-                            ...btnSecondary,
-                            fontSize: "0.75rem",
-                            padding: "0.375rem 0.75rem",
-                        }}
-                    >
-                        📋 Activity
-                    </button>
-                    <button
-                        onClick={() => router.push("/admin/users")}
-                        style={{
-                            ...btnSecondary,
-                            fontSize: "0.75rem",
-                            padding: "0.375rem 0.75rem",
-                        }}
-                    >
-                        👥 Users
-                    </button>
-                    <button
-                        onClick={() => router.push("/admin/config")}
-                        style={{
-                            ...btnSecondary,
-                            fontSize: "0.75rem",
-                            padding: "0.375rem 0.75rem",
-                        }}
-                    >
-                        ⚙️ Config
-                    </button>
-                    <button
-                        onClick={() => signOut({ callbackUrl: "/login" })}
-                        style={{
-                            ...btnSecondary,
-                            fontSize: "0.75rem",
-                            padding: "0.375rem 0.75rem",
-                        }}
-                    >
-                        Sign Out
-                    </button>
-                </div>
-            </header>
+        <div className="min-h-screen bg-surface-secondary">
 
             {/* ── Content ─────────────────────────────────────────── */}
-            <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "1.5rem" }}>
+            <div className="max-w-[1100px] mx-auto p-6">
 
                 {/* ── Date Picker Row ──────────────────────────────── */}
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.75rem",
-                        marginBottom: "1rem",
-                    }}
-                >
-                    <label
-                        style={{
-                            fontSize: "0.8125rem",
-                            fontWeight: 600,
-                            color: "var(--text-secondary)",
-                        }}
-                    >
+                <div className="flex items-center gap-3 mb-4">
+                    <label className="text-[0.8125rem] font-semibold text-fg-secondary">
                         📅 View date:
                     </label>
                     <input
@@ -290,76 +136,38 @@ export default function AdminDashboard() {
                         value={selectedDate}
                         max={todayIST()}
                         onChange={(e) => setSelectedDate(e.target.value)}
-                        style={{
-                            ...btnSecondary,
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "0.8125rem",
-                        }}
+                        className="px-3 py-2 text-[0.8125rem] font-mono text-fg-secondary bg-surface-secondary
+                                   border border-border rounded-lg cursor-pointer
+                                   outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-150"
                     />
                     {!isToday && (
                         <button
                             onClick={() => setSelectedDate(todayIST())}
-                            style={{
-                                ...btnSecondary,
-                                fontSize: "0.75rem",
-                                padding: "0.375rem 0.75rem",
-                            }}
+                            className="px-3 py-1.5 text-xs font-medium text-fg-secondary bg-surface-secondary
+                                       border border-border rounded-lg cursor-pointer
+                                       hover:bg-surface-tertiary hover:text-fg transition-colors duration-150"
                         >
                             ← Back to Today
                         </button>
                     )}
                     {isToday && (
-                        <span
-                            style={{
-                                fontSize: "0.6875rem",
-                                color: "var(--text-muted)",
-                            }}
-                        >
+                        <span className="text-[0.6875rem] text-fg-muted">
                             Auto-refreshes every 30s
                         </span>
                     )}
                 </div>
 
                 {/* ── Stats Cards Row ─────────────────────────────────── */}
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                        gap: "1rem",
-                        marginBottom: "1.5rem",
-                    }}
-                >
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
                     {/* Total Revenue */}
-                    <div style={{ ...card, padding: "1.25rem" }}>
-                        <p
-                            style={{
-                                fontSize: "0.75rem",
-                                fontWeight: 500,
-                                color: "var(--text-muted)",
-                                marginBottom: "0.25rem",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.05em",
-                            }}
-                        >
+                    <div className="bg-surface border border-border rounded-lg shadow-sm p-5">
+                        <p className="text-xs font-medium text-fg-muted mb-1 uppercase tracking-wider">
                             {dateLabel}&apos;s Revenue
                         </p>
-                        <p
-                            style={{
-                                fontSize: "1.75rem",
-                                fontWeight: 700,
-                                color: "var(--text-primary)",
-                                letterSpacing: "-0.02em",
-                            }}
-                        >
+                        <p className="text-[1.75rem] font-bold text-fg tracking-tight tabular-nums">
                             {formatCurrency(stats?.totalRevenue || 0)}
                         </p>
-                        <p
-                            style={{
-                                fontSize: "0.75rem",
-                                color: "var(--text-muted)",
-                                marginTop: "0.25rem",
-                            }}
-                        >
+                        <p className="text-xs text-fg-muted mt-1">
                             {stats?.billCount || 0} bills
                         </p>
                     </div>
@@ -370,72 +178,31 @@ export default function AdminDashboard() {
                         const amount = stats?.byPaymentMode[mode] || 0;
                         const count = stats?.billCountByMode[mode] || 0;
                         return (
-                            <div key={mode} style={{ ...card, padding: "1.25rem" }}>
-                                <p
-                                    style={{
-                                        fontSize: "0.75rem",
-                                        fontWeight: 500,
-                                        color: "var(--text-muted)",
-                                        marginBottom: "0.25rem",
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                    }}
-                                >
+                            <div key={mode} className="bg-surface border border-border rounded-lg shadow-sm p-5">
+                                <p className="text-xs font-medium text-fg-muted mb-1 uppercase tracking-wider">
                                     {config.label}
                                 </p>
                                 <p
-                                    style={{
-                                        fontSize: "1.5rem",
-                                        fontWeight: 700,
-                                        color: config.color,
-                                        letterSpacing: "-0.02em",
-                                    }}
+                                    className="text-2xl font-bold tracking-tight tabular-nums"
+                                    style={{ color: config.color }}
                                 >
                                     {formatCurrency(amount)}
                                 </p>
-                                <p
-                                    style={{
-                                        fontSize: "0.75rem",
-                                        color: "var(--text-muted)",
-                                        marginTop: "0.25rem",
-                                    }}
-                                >
+                                <p className="text-xs text-fg-muted mt-1">
                                     {count} bill{count !== 1 ? "s" : ""}
                                 </p>
                             </div>
                         );
                     })}
                     {/* Prescription Summary */}
-                    <div style={{ ...card, padding: "1.25rem" }}>
-                        <p
-                            style={{
-                                fontSize: "0.75rem",
-                                fontWeight: 500,
-                                color: "var(--text-muted)",
-                                marginBottom: "0.25rem",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.05em",
-                            }}
-                        >
+                    <div className="bg-surface border border-border rounded-lg shadow-sm p-5">
+                        <p className="text-xs font-medium text-fg-muted mb-1 uppercase tracking-wider">
                             Prescriptions
                         </p>
-                        <p
-                            style={{
-                                fontSize: "1.5rem",
-                                fontWeight: 700,
-                                color: "var(--blue-600, #2563EB)",
-                                letterSpacing: "-0.02em",
-                            }}
-                        >
+                        <p className="text-2xl font-bold text-blue-600 tracking-tight tabular-nums">
                             {stats?.prescriptionCount || 0} Rx
                         </p>
-                        <p
-                            style={{
-                                fontSize: "0.75rem",
-                                color: "var(--text-muted)",
-                                marginTop: "0.25rem",
-                            }}
-                        >
+                        <p className="text-xs text-fg-muted mt-1">
                             {stats?.nonPrescriptionCount || 0} OTC · {formatCurrency(stats?.totalPrescriptionCharges || 0)} charges
                         </p>
                     </div>
@@ -443,27 +210,11 @@ export default function AdminDashboard() {
 
                 {/* ── Payment Stream Proportion Bar ────────────────── */}
                 {(stats?.totalRevenue || 0) > 0 && (
-                    <div style={{ ...card, padding: "1rem 1.25rem", marginBottom: "1.5rem" }}>
-                        <p
-                            style={{
-                                fontSize: "0.75rem",
-                                fontWeight: 600,
-                                color: "var(--text-secondary)",
-                                marginBottom: "0.5rem",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.05em",
-                            }}
-                        >
+                    <div className="bg-surface border border-border rounded-lg shadow-sm px-5 py-4 mb-6">
+                        <p className="text-xs font-semibold text-fg-secondary mb-2 uppercase tracking-wider">
                             Payment Stream
                         </p>
-                        <div
-                            style={{
-                                display: "flex",
-                                borderRadius: "var(--radius)",
-                                overflow: "hidden",
-                                height: "28px",
-                            }}
-                        >
+                        <div className="flex rounded-lg overflow-hidden h-7">
                             {paymentModes.map((mode) => {
                                 const amount = stats?.byPaymentMode[mode] || 0;
                                 const pct = stats?.totalRevenue
@@ -475,18 +226,11 @@ export default function AdminDashboard() {
                                     <div
                                         key={mode}
                                         title={`${config.label}: ${formatCurrency(amount)} (${pct.toFixed(1)}%)`}
+                                        className="flex items-center justify-center text-white text-[0.6875rem] font-semibold overflow-hidden transition-[width] duration-300"
                                         style={{
                                             width: `${pct}%`,
                                             background: config.color,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            color: "#fff",
-                                            fontSize: "0.6875rem",
-                                            fontWeight: 600,
                                             minWidth: pct > 8 ? "auto" : "0",
-                                            overflow: "hidden",
-                                            transition: "width 0.3s ease",
                                         }}
                                     >
                                         {pct > 12 ? `${config.label} ${pct.toFixed(0)}%` : ""}
@@ -494,36 +238,18 @@ export default function AdminDashboard() {
                                 );
                             })}
                         </div>
-                        <div
-                            style={{
-                                display: "flex",
-                                gap: "1rem",
-                                marginTop: "0.5rem",
-                                flexWrap: "wrap",
-                            }}
-                        >
+                        <div className="flex gap-4 mt-2 flex-wrap">
                             {paymentModes.map((mode) => {
                                 const amount = stats?.byPaymentMode[mode] || 0;
                                 const config = PAYMENT_MODE_CONFIG[mode];
                                 return (
                                     <span
                                         key={mode}
-                                        style={{
-                                            fontSize: "0.75rem",
-                                            color: "var(--text-secondary)",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: "0.375rem",
-                                        }}
+                                        className="text-xs text-fg-secondary flex items-center gap-1.5"
                                     >
                                         <span
-                                            style={{
-                                                width: "10px",
-                                                height: "10px",
-                                                borderRadius: "2px",
-                                                background: config.color,
-                                                display: "inline-block",
-                                            }}
+                                            className="inline-block w-2.5 h-2.5 rounded-sm"
+                                            style={{ background: config.color }}
                                         />
                                         {config.label}: {formatCurrency(amount)}
                                     </span>
@@ -534,63 +260,30 @@ export default function AdminDashboard() {
                 )}
 
                 {/* ── Bills Table ────────────────────────────────────── */}
-                <div style={{ ...card, overflow: "hidden" }}>
-                    <div
-                        style={{
-                            padding: "1rem 1.25rem",
-                            borderBottom: "1px solid var(--border-default)",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                        }}
-                    >
-                        <h2
-                            style={{
-                                fontSize: "0.875rem",
-                                fontWeight: 600,
-                                color: "var(--text-primary)",
-                            }}
-                        >
+                <div className="bg-surface border border-border rounded-lg shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-border flex justify-between items-center">
+                        <h2 className="text-sm font-semibold text-fg">
                             {dateLabel}&apos;s Bills ({stats?.bills.length || 0})
                         </h2>
                         <button
                             onClick={fetchStats}
-                            style={{
-                                ...btnSecondary,
-                                fontSize: "0.6875rem",
-                                padding: "0.25rem 0.5rem",
-                            }}
+                            className="px-2 py-1 text-[0.6875rem] font-medium text-fg-secondary bg-surface-secondary
+                                       border border-border rounded-lg cursor-pointer
+                                       hover:bg-surface-tertiary hover:text-fg transition-colors duration-150"
                         >
                             ↻ Refresh
                         </button>
                     </div>
 
                     {!stats?.bills.length ? (
-                        <div
-                            style={{
-                                padding: "3rem",
-                                textAlign: "center",
-                                color: "var(--text-muted)",
-                                fontSize: "0.875rem",
-                            }}
-                        >
+                        <div className="p-12 text-center text-fg-muted text-sm">
                             No bills for this date.
                         </div>
                     ) : (
-                        <div style={{ overflowX: "auto" }}>
-                            <table
-                                style={{
-                                    width: "100%",
-                                    borderCollapse: "collapse",
-                                    fontSize: "0.8125rem",
-                                }}
-                            >
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse text-[0.8125rem]">
                                 <thead>
-                                    <tr
-                                        style={{
-                                            borderBottom: "1px solid var(--border-default)",
-                                        }}
-                                    >
+                                    <tr className="border-b border-border">
                                         {[
                                             "Bill #",
                                             "Time",
@@ -600,20 +293,12 @@ export default function AdminDashboard() {
                                             "Rx",
                                             "Total",
                                             "By",
-                                            "",
+                                            "Actions",
                                         ].map((h) => (
                                             <th
                                                 key={h}
-                                                style={{
-                                                    padding: "0.625rem 0.75rem",
-                                                    textAlign: "left",
-                                                    fontWeight: 600,
-                                                    color: "var(--text-secondary)",
-                                                    fontSize: "0.75rem",
-                                                    textTransform: "uppercase",
-                                                    letterSpacing: "0.05em",
-                                                    whiteSpace: "nowrap",
-                                                }}
+                                                className="px-3 py-2.5 text-left font-semibold text-fg-secondary text-xs
+                                                           uppercase tracking-wider whitespace-nowrap"
                                             >
                                                 {h}
                                             </th>
@@ -627,112 +312,65 @@ export default function AdminDashboard() {
                                         return (
                                             <tr
                                                 key={bill.id}
-                                                style={{
-                                                    borderBottom: "1px solid var(--border-light)",
-                                                    transition: "background 0.1s",
-                                                }}
-                                                onMouseEnter={(e) =>
-                                                (e.currentTarget.style.background =
-                                                    "var(--bg-secondary)")
-                                                }
-                                                onMouseLeave={(e) =>
-                                                    (e.currentTarget.style.background = "transparent")
-                                                }
+                                                className="border-b border-border last:border-b-0 hover:bg-surface-secondary transition-colors duration-100"
                                             >
-                                                <td
-                                                    style={{
-                                                        padding: "0.625rem 0.75rem",
-                                                        fontFamily: "var(--font-mono)",
-                                                        fontWeight: 600,
-                                                        color: "var(--text-primary)",
-                                                        whiteSpace: "nowrap",
-                                                    }}
-                                                >
+                                                <td className="px-3 py-2.5 font-mono font-semibold text-fg whitespace-nowrap">
                                                     {bill.billNumber}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        padding: "0.625rem 0.75rem",
-                                                        color: "var(--text-secondary)",
-                                                        whiteSpace: "nowrap",
-                                                    }}
-                                                >
+                                                <td className="px-3 py-2.5 text-fg-secondary whitespace-nowrap">
                                                     {formatISTTime(new Date(bill.createdAt))}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        padding: "0.625rem 0.75rem",
-                                                        color: "var(--text-primary)",
-                                                    }}
-                                                >
+                                                <td className="px-3 py-2.5 text-fg">
                                                     {bill.customerName || (
-                                                        <span style={{ color: "var(--text-muted)" }}>
-                                                            Walk-in
-                                                        </span>
+                                                        <span className="text-fg-muted">Walk-in</span>
                                                     )}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        padding: "0.625rem 0.75rem",
-                                                        color: "var(--text-secondary)",
-                                                    }}
-                                                >
+                                                <td className="px-3 py-2.5 text-fg-secondary tabular-nums">
                                                     {bill.itemCount}
                                                 </td>
-                                                <td style={{ padding: "0.625rem 0.75rem" }}>
+                                                <td className="px-3 py-2.5">
                                                     <span
+                                                        className="px-2 py-0.5 rounded text-[0.6875rem] font-semibold"
                                                         style={{
-                                                            padding: "0.125rem 0.5rem",
-                                                            borderRadius: "var(--radius-sm)",
                                                             background: modeConfig?.lightBg || "#f3f4f6",
                                                             color: modeConfig?.color || "#374151",
-                                                            fontSize: "0.6875rem",
-                                                            fontWeight: 600,
                                                         }}
                                                     >
                                                         {modeConfig?.label || bill.paymentMode}
                                                     </span>
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        padding: "0.625rem 0.75rem",
-                                                        color: "var(--text-secondary)",
-                                                    }}
-                                                >
+                                                <td className="px-3 py-2.5 text-fg-secondary">
                                                     {bill.hasPrescription ? "📋" : "—"}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        padding: "0.625rem 0.75rem",
-                                                        fontWeight: 600,
-                                                        color: "var(--text-primary)",
-                                                        whiteSpace: "nowrap",
-                                                    }}
-                                                >
+                                                <td className="px-3 py-2.5 font-semibold text-fg whitespace-nowrap tabular-nums">
                                                     {formatCurrency(bill.grandTotal)}
                                                 </td>
-                                                <td
-                                                    style={{
-                                                        padding: "0.625rem 0.75rem",
-                                                        color: "var(--text-muted)",
-                                                        fontSize: "0.75rem",
-                                                    }}
-                                                >
+                                                <td className="px-3 py-2.5 text-fg-muted text-xs">
                                                     {bill.createdByUser}
                                                 </td>
-                                                <td style={{ padding: "0.625rem 0.75rem" }}>
-                                                    <button
-                                                        onClick={() =>
-                                                            handleDelete(bill.id, bill.billNumber)
-                                                        }
-                                                        disabled={deletingId === bill.id}
-                                                        style={{
-                                                            ...btnDanger,
-                                                            opacity: deletingId === bill.id ? 0.5 : 1,
-                                                        }}
-                                                    >
-                                                        {deletingId === bill.id ? "..." : "Delete"}
-                                                    </button>
+                                                <td className="px-3 py-2.5">
+                                                    <div className="flex gap-1.5">
+                                                        <Link
+                                                            href={`/bills/${bill.id}/edit`}
+                                                            className="px-2.5 py-1.5 text-xs font-medium text-blue-600 bg-blue-50
+                                                                       border border-blue-500 rounded-lg no-underline
+                                                                       hover:bg-blue-100 transition-colors duration-150"
+                                                        >
+                                                            Edit
+                                                        </Link>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDelete(bill.id, bill.billNumber)
+                                                            }
+                                                            disabled={deletingId === bill.id}
+                                                            className={`px-2.5 py-1.5 text-xs font-medium text-red-600 bg-red-50
+                                                                       border border-red-500 rounded-lg cursor-pointer
+                                                                       hover:bg-red-100 transition-colors duration-150
+                                                                       ${deletingId === bill.id ? "opacity-50 cursor-not-allowed" : ""}`}
+                                                        >
+                                                            {deletingId === bill.id ? "..." : "Delete"}
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );

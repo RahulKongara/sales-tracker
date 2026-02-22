@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseISTDateParam, getISTDayBounds, toISTDateString } from "@/lib/utils";
 
 /**
  * GET /api/admin/export/csv?from=YYYY-MM-DD&to=YYYY-MM-DD&format=detailed|summary
@@ -23,16 +24,11 @@ export async function GET(req: NextRequest) {
         const format = searchParams.get("format") || "detailed";
 
         // Default: today
-        const now = new Date();
-        const todayStr = now.toLocaleDateString("en-CA", {
-            timeZone: "Asia/Kolkata",
-        });
-        const to = toParam
-            ? new Date(`${toParam}T23:59:59.999+05:30`)
-            : new Date(`${todayStr}T23:59:59.999+05:30`);
-        const from = fromParam
-            ? new Date(`${fromParam}T00:00:00.000+05:30`)
-            : new Date(`${todayStr}T00:00:00.000+05:30`);
+        const defaults = getISTDayBounds();
+        const parsedFrom = parseISTDateParam(fromParam);
+        const parsedTo = parseISTDateParam(toParam);
+        const from = parsedFrom?.start ?? defaults.start;
+        const to = parsedTo?.end ?? defaults.end;
 
         const bills = await prisma.bill.findMany({
             where: {
@@ -73,9 +69,7 @@ export async function GET(req: NextRequest) {
             ];
 
             for (const bill of bills) {
-                const dateIST = bill.createdAt.toLocaleDateString("en-CA", {
-                    timeZone: "Asia/Kolkata",
-                });
+                const dateIST = toISTDateString(bill.createdAt);
                 const timeIST = bill.createdAt.toLocaleTimeString("en-IN", {
                     timeZone: "Asia/Kolkata",
                     hour: "2-digit",
@@ -116,9 +110,7 @@ export async function GET(req: NextRequest) {
             ];
 
             for (const bill of bills) {
-                const dateIST = bill.createdAt.toLocaleDateString("en-CA", {
-                    timeZone: "Asia/Kolkata",
-                });
+                const dateIST = toISTDateString(bill.createdAt);
                 const timeIST = bill.createdAt.toLocaleTimeString("en-IN", {
                     timeZone: "Asia/Kolkata",
                     hour: "2-digit",
@@ -152,7 +144,9 @@ export async function GET(req: NextRequest) {
         ].join("\n");
 
         const formatLabel = format === "summary" ? "summary" : "detailed";
-        const filename = `bills_${formatLabel}_${fromParam || todayStr}_to_${toParam || todayStr}.csv`;
+        const fromLabel = toISTDateString(from);
+        const toLabel = toISTDateString(to);
+        const filename = `bills_${formatLabel}_${fromLabel}_to_${toLabel}.csv`;
 
         return new NextResponse(csv, {
             headers: {

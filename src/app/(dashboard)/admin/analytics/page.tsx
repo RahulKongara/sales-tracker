@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, toISTDateString } from "@/lib/utils";
 import { PAYMENT_MODE_CONFIG } from "@/lib/constants";
 import type { PaymentMode } from "@/lib/constants";
 
@@ -47,52 +46,13 @@ interface AnalyticsData {
 }
 
 /* ────────────────────────────────────────────────────────────── */
-/*  Styles                                                       */
-/* ────────────────────────────────────────────────────────────── */
-
-const card: React.CSSProperties = {
-    background: "var(--bg-primary)",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius-lg)",
-    boxShadow: "var(--shadow-sm)",
-};
-
-const btnSecondary: React.CSSProperties = {
-    padding: "0.5rem 0.75rem",
-    fontSize: "0.8125rem",
-    fontWeight: 500,
-    color: "var(--text-secondary)",
-    background: "var(--bg-secondary)",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius)",
-    cursor: "pointer",
-};
-
-const input: React.CSSProperties = {
-    padding: "0.4rem 0.5rem",
-    fontSize: "0.8125rem",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius)",
-    background: "var(--bg-primary)",
-    color: "var(--text-primary)",
-    outline: "none",
-};
-
-/* ────────────────────────────────────────────────────────────── */
 /*  Mini Bar Chart (pure CSS)                                    */
 /* ────────────────────────────────────────────────────────────── */
 
 function BarChart({ data }: { data: DailyDataPoint[] }) {
     if (data.length === 0) {
         return (
-            <div
-                style={{
-                    padding: "2rem",
-                    textAlign: "center",
-                    color: "var(--text-muted)",
-                    fontSize: "0.8125rem",
-                }}
-            >
+            <div className="p-8 text-center text-fg-muted text-[0.8125rem]">
                 No data for this period.
             </div>
         );
@@ -101,18 +61,10 @@ function BarChart({ data }: { data: DailyDataPoint[] }) {
     const maxRevenue = Math.max(...data.map((d) => d.revenue), 1);
 
     return (
-        <div
-            style={{
-                display: "flex",
-                alignItems: "flex-end",
-                gap: "4px",
-                height: "180px",
-                padding: "0 0.5rem",
-            }}
-        >
+        <div className="flex items-end gap-1 h-[180px] px-2">
             {data.map((d) => {
                 const height = (d.revenue / maxRevenue) * 150;
-                const dateObj = new Date(d.date + "T12:00:00");
+                const dateObj = new Date(d.date + "T12:00:00+05:30");
                 const dayLabel = dateObj.toLocaleDateString("en-IN", {
                     day: "2-digit",
                     month: "short",
@@ -120,42 +72,18 @@ function BarChart({ data }: { data: DailyDataPoint[] }) {
                 return (
                     <div
                         key={d.date}
-                        style={{
-                            flex: 1,
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            gap: "4px",
-                        }}
+                        className="flex-1 flex flex-col items-center gap-1"
                     >
-                        <span
-                            style={{
-                                fontSize: "0.625rem",
-                                color: "var(--text-muted)",
-                                whiteSpace: "nowrap",
-                            }}
-                        >
+                        <span className="text-[0.625rem] text-fg-muted whitespace-nowrap">
                             {formatCurrency(d.revenue)}
                         </span>
                         <div
-                            style={{
-                                width: "100%",
-                                maxWidth: "40px",
-                                height: `${Math.max(height, 4)}px`,
-                                background:
-                                    "linear-gradient(180deg, var(--blue-500), var(--blue-400, #60a5fa))",
-                                borderRadius: "4px 4px 0 0",
-                                transition: "height 0.3s ease",
-                            }}
+                            className="w-full max-w-[40px] rounded-t-[4px] transition-[height] duration-300
+                                       bg-gradient-to-b from-blue-500 to-[var(--blue-400,#60a5fa)]"
+                            style={{ height: `${Math.max(height, 4)}px` }}
                             title={`${dayLabel}: ${formatCurrency(d.revenue)} (${d.count} bills)`}
                         />
-                        <span
-                            style={{
-                                fontSize: "0.625rem",
-                                color: "var(--text-muted)",
-                                whiteSpace: "nowrap",
-                            }}
-                        >
+                        <span className="text-[0.625rem] text-fg-muted whitespace-nowrap">
                             {dayLabel}
                         </span>
                     </div>
@@ -164,6 +92,16 @@ function BarChart({ data }: { data: DailyDataPoint[] }) {
         </div>
     );
 }
+
+/* ────────────────────────────────────────────────────────────── */
+/*  Shared classes                                               */
+/* ────────────────────────────────────────────────────────────── */
+
+const CARD = "bg-surface border border-border rounded-lg shadow-sm";
+const INPUT_CLS =
+    "px-2 py-1.5 text-[0.8125rem] border border-border rounded-lg bg-surface text-fg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-150";
+const BTN_SECONDARY =
+    "px-2 py-1 text-[0.6875rem] font-medium text-fg-secondary bg-surface-secondary border border-border rounded-lg cursor-pointer hover:bg-surface-tertiary hover:text-fg transition-colors duration-150";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Component                                                    */
@@ -176,10 +114,8 @@ export default function AnalyticsPage() {
     const [error, setError] = useState("");
 
     // Date range — default last 7 days
-    const today = new Date()
-        .toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-    const weekAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
-        .toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+    const today = toISTDateString();
+    const weekAgo = toISTDateString(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000));
 
     const [fromDate, setFromDate] = useState(weekAgo);
     const [toDate, setToDate] = useState(today);
@@ -211,10 +147,8 @@ export default function AnalyticsPage() {
 
     // Quick presets
     function setPreset(days: number) {
-        const end = new Date()
-            .toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-        const start = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000)
-            .toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+        const end = toISTDateString();
+        const start = toISTDateString(new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000));
         setFromDate(start);
         setToDate(end);
     }
@@ -222,120 +156,34 @@ export default function AnalyticsPage() {
     const paymentModes: PaymentMode[] = ["CASH", "CARD", "PAYTM"];
 
     return (
-        <div style={{ minHeight: "100vh", background: "var(--bg-secondary)" }}>
-            {/* ── Header ──────────────────────────────────────────── */}
-            <header
-                style={{
-                    background: "var(--bg-primary)",
-                    borderBottom: "1px solid var(--border-default)",
-                    padding: "0.75rem 1.5rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                }}
-            >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <span style={{ fontSize: "1.25rem" }}>📈</span>
-                    <h1
-                        style={{
-                            fontSize: "1rem",
-                            fontWeight: 600,
-                            color: "var(--text-primary)",
-                            letterSpacing: "-0.01em",
-                        }}
-                    >
-                        Analytics
-                    </h1>
-                </div>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button
-                        onClick={() => router.push("/admin/dashboard")}
-                        style={{
-                            ...btnSecondary,
-                            fontSize: "0.75rem",
-                            padding: "0.375rem 0.75rem",
-                        }}
-                    >
-                        ← Dashboard
-                    </button>
-                    <button
-                        onClick={() => router.push("/admin/users")}
-                        style={{
-                            ...btnSecondary,
-                            fontSize: "0.75rem",
-                            padding: "0.375rem 0.75rem",
-                        }}
-                    >
-                        👥 Users
-                    </button>
-                    <button
-                        onClick={() => signOut({ callbackUrl: "/login" })}
-                        style={{
-                            ...btnSecondary,
-                            fontSize: "0.75rem",
-                            padding: "0.375rem 0.75rem",
-                        }}
-                    >
-                        Sign Out
-                    </button>
-                </div>
-            </header>
+        <div className="min-h-screen bg-surface-secondary">
 
-            <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "1.5rem" }}>
+            <div className="max-w-[1100px] mx-auto p-6">
                 {/* ── Date Range Picker ────────────────────────────────── */}
-                <div
-                    style={{
-                        ...card,
-                        padding: "1rem 1.25rem",
-                        marginBottom: "1.5rem",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "1rem",
-                        flexWrap: "wrap",
-                    }}
-                >
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <label
-                            style={{
-                                fontSize: "0.8125rem",
-                                fontWeight: 500,
-                                color: "var(--text-secondary)",
-                            }}
-                        >
+                <div className={`${CARD} px-5 py-4 mb-6 flex items-center gap-4 flex-wrap`}>
+                    <div className="flex items-center gap-2">
+                        <label className="text-[0.8125rem] font-medium text-fg-secondary">
                             From
                         </label>
                         <input
                             type="date"
                             value={fromDate}
                             onChange={(e) => setFromDate(e.target.value)}
-                            style={input}
+                            className={INPUT_CLS}
                         />
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <label
-                            style={{
-                                fontSize: "0.8125rem",
-                                fontWeight: 500,
-                                color: "var(--text-secondary)",
-                            }}
-                        >
+                    <div className="flex items-center gap-2">
+                        <label className="text-[0.8125rem] font-medium text-fg-secondary">
                             To
                         </label>
                         <input
                             type="date"
                             value={toDate}
                             onChange={(e) => setToDate(e.target.value)}
-                            style={input}
+                            className={INPUT_CLS}
                         />
                     </div>
-                    <div
-                        style={{
-                            display: "flex",
-                            gap: "0.375rem",
-                            borderLeft: "1px solid var(--border-default)",
-                            paddingLeft: "0.75rem",
-                        }}
-                    >
+                    <div className="flex gap-1.5 border-l border-border pl-3">
                         {[
                             { label: "Today", days: 1 },
                             { label: "7 Days", days: 7 },
@@ -345,22 +193,13 @@ export default function AnalyticsPage() {
                             <button
                                 key={p.days}
                                 onClick={() => setPreset(p.days)}
-                                style={{
-                                    ...btnSecondary,
-                                    fontSize: "0.6875rem",
-                                    padding: "0.25rem 0.5rem",
-                                }}
+                                className={BTN_SECONDARY}
                             >
                                 {p.label}
                             </button>
                         ))}
                     </div>
-                    <div
-                        style={{
-                            borderLeft: "1px solid var(--border-default)",
-                            paddingLeft: "0.75rem",
-                        }}
-                    >
+                    <div className="border-l border-border pl-3">
                         <button
                             onClick={() => {
                                 window.open(
@@ -368,12 +207,7 @@ export default function AnalyticsPage() {
                                     "_blank"
                                 );
                             }}
-                            style={{
-                                ...btnSecondary,
-                                fontSize: "0.6875rem",
-                                padding: "0.25rem 0.5rem",
-                                color: "var(--green-600)",
-                            }}
+                            className={`${BTN_SECONDARY} text-green-600`}
                         >
                             📥 CSV
                         </button>
@@ -381,94 +215,51 @@ export default function AnalyticsPage() {
                 </div>
 
                 {loading ? (
-                    <div
-                        style={{
-                            padding: "3rem",
-                            textAlign: "center",
-                            color: "var(--text-muted)",
-                            fontSize: "0.875rem",
-                        }}
-                    >
+                    <div className="p-12 text-center text-fg-muted text-sm">
                         Loading analytics...
                     </div>
                 ) : error ? (
-                    <div
-                        style={{
-                            padding: "3rem",
-                            textAlign: "center",
-                            color: "var(--red-600)",
-                            fontSize: "0.875rem",
-                        }}
-                    >
+                    <div className="p-12 text-center text-red-600 text-sm">
                         {error}
                     </div>
                 ) : data ? (
                     <>
                         {/* ── Summary Cards ──────────────────────────────────── */}
-                        <div
-                            style={{
-                                display: "grid",
-                                gridTemplateColumns: "repeat(4, 1fr)",
-                                gap: "1rem",
-                                marginBottom: "1.5rem",
-                            }}
-                        >
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                             {[
                                 {
                                     label: "Total Revenue",
                                     value: formatCurrency(data.summary.totalRevenue),
                                     sub: `${data.summary.billCount} bills`,
-                                    color: "var(--text-primary)",
+                                    color: "text-fg",
                                 },
                                 {
                                     label: "Medicines Revenue",
                                     value: formatCurrency(data.summary.totalMedicinesRevenue),
                                     sub: `${((data.summary.totalMedicinesRevenue / Math.max(data.summary.totalRevenue, 1)) * 100).toFixed(0)}% of total`,
-                                    color: "var(--blue-600)",
+                                    color: "text-blue-600",
                                 },
                                 {
                                     label: "Prescription Revenue",
                                     value: formatCurrency(data.summary.totalPrescriptionRevenue),
                                     sub: `${((data.summary.totalPrescriptionRevenue / Math.max(data.summary.totalRevenue, 1)) * 100).toFixed(0)}% of total`,
-                                    color: "var(--green-600)",
+                                    color: "text-green-600",
                                 },
                                 {
                                     label: "Avg Bill Value",
                                     value: formatCurrency(data.summary.avgBillValue),
                                     sub: "per bill",
-                                    color: "var(--text-primary)",
+                                    color: "text-fg",
                                 },
                             ].map((c) => (
-                                <div key={c.label} style={{ ...card, padding: "1.25rem" }}>
-                                    <p
-                                        style={{
-                                            fontSize: "0.75rem",
-                                            fontWeight: 500,
-                                            color: "var(--text-muted)",
-                                            marginBottom: "0.25rem",
-                                            textTransform: "uppercase",
-                                            letterSpacing: "0.05em",
-                                        }}
-                                    >
+                                <div key={c.label} className={`${CARD} p-5`}>
+                                    <p className="text-xs font-medium text-fg-muted mb-1 uppercase tracking-wider">
                                         {c.label}
                                     </p>
-                                    <p
-                                        style={{
-                                            fontSize: "1.5rem",
-                                            fontWeight: 700,
-                                            color: c.color,
-                                            letterSpacing: "-0.02em",
-                                        }}
-                                    >
+                                    <p className={`text-2xl font-bold tracking-tight tabular-nums ${c.color}`}>
                                         {c.value}
                                     </p>
-                                    <p
-                                        style={{
-                                            fontSize: "0.75rem",
-                                            color: "var(--text-muted)",
-                                            marginTop: "0.25rem",
-                                        }}
-                                    >
+                                    <p className="text-xs text-fg-muted mt-1">
                                         {c.sub}
                                     </p>
                                 </div>
@@ -476,48 +267,21 @@ export default function AnalyticsPage() {
                         </div>
 
                         {/* ── Revenue Trend + Payment Breakdown ──────────────── */}
-                        <div
-                            style={{
-                                display: "grid",
-                                gridTemplateColumns: "2fr 1fr",
-                                gap: "1rem",
-                                marginBottom: "1.5rem",
-                            }}
-                        >
+                        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4 mb-6">
                             {/* Daily Revenue Chart */}
-                            <div style={{ ...card, padding: "1.25rem" }}>
-                                <h2
-                                    style={{
-                                        fontSize: "0.875rem",
-                                        fontWeight: 600,
-                                        color: "var(--text-primary)",
-                                        marginBottom: "1rem",
-                                    }}
-                                >
+                            <div className={`${CARD} p-5`}>
+                                <h2 className="text-sm font-semibold text-fg mb-4">
                                     Daily Revenue
                                 </h2>
                                 <BarChart data={data.dailyData} />
                             </div>
 
                             {/* Payment Breakdown */}
-                            <div style={{ ...card, padding: "1.25rem" }}>
-                                <h2
-                                    style={{
-                                        fontSize: "0.875rem",
-                                        fontWeight: 600,
-                                        color: "var(--text-primary)",
-                                        marginBottom: "1rem",
-                                    }}
-                                >
+                            <div className={`${CARD} p-5`}>
+                                <h2 className="text-sm font-semibold text-fg mb-4">
                                     Payment Breakdown
                                 </h2>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: "0.75rem",
-                                    }}
-                                >
+                                <div className="flex flex-col gap-3">
                                     {paymentModes.map((mode) => {
                                         const config = PAYMENT_MODE_CONFIG[mode];
                                         const modeData = data.byPaymentMode[mode];
@@ -529,57 +293,28 @@ export default function AnalyticsPage() {
                                                 : 0;
                                         return (
                                             <div key={mode}>
-                                                <div
-                                                    style={{
-                                                        display: "flex",
-                                                        justifyContent: "space-between",
-                                                        marginBottom: "0.25rem",
-                                                    }}
-                                                >
+                                                <div className="flex justify-between mb-1">
                                                     <span
-                                                        style={{
-                                                            fontSize: "0.8125rem",
-                                                            fontWeight: 500,
-                                                            color: config.color,
-                                                        }}
+                                                        className="text-[0.8125rem] font-medium"
+                                                        style={{ color: config.color }}
                                                     >
                                                         {config.label}
                                                     </span>
-                                                    <span
-                                                        style={{
-                                                            fontSize: "0.8125rem",
-                                                            fontWeight: 600,
-                                                            color: "var(--text-primary)",
-                                                        }}
-                                                    >
+                                                    <span className="text-[0.8125rem] font-semibold text-fg tabular-nums">
                                                         {formatCurrency(total)}
                                                     </span>
                                                 </div>
                                                 {/* Progress bar */}
-                                                <div
-                                                    style={{
-                                                        height: "8px",
-                                                        background: "var(--bg-secondary)",
-                                                        borderRadius: "4px",
-                                                        overflow: "hidden",
-                                                    }}
-                                                >
+                                                <div className="h-2 bg-surface-secondary rounded overflow-hidden">
                                                     <div
+                                                        className="h-full rounded transition-[width] duration-300"
                                                         style={{
                                                             width: `${pct}%`,
-                                                            height: "100%",
                                                             background: config.color,
-                                                            borderRadius: "4px",
-                                                            transition: "width 0.3s ease",
                                                         }}
                                                     />
                                                 </div>
-                                                <span
-                                                    style={{
-                                                        fontSize: "0.6875rem",
-                                                        color: "var(--text-muted)",
-                                                    }}
-                                                >
+                                                <span className="text-[0.6875rem] text-fg-muted">
                                                     {count} bill{count !== 1 ? "s" : ""} · {pct.toFixed(0)}%
                                                 </span>
                                             </div>
@@ -590,93 +325,33 @@ export default function AnalyticsPage() {
                         </div>
 
                         {/* ── Top Medicines + Employee Stats ─────────────────── */}
-                        <div
-                            style={{
-                                display: "grid",
-                                gridTemplateColumns: "1fr 1fr",
-                                gap: "1rem",
-                            }}
-                        >
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {/* Top Medicines */}
-                            <div style={{ ...card, padding: "1.25rem" }}>
-                                <h2
-                                    style={{
-                                        fontSize: "0.875rem",
-                                        fontWeight: 600,
-                                        color: "var(--text-primary)",
-                                        marginBottom: "1rem",
-                                    }}
-                                >
+                            <div className={`${CARD} p-5`}>
+                                <h2 className="text-sm font-semibold text-fg mb-4">
                                     Top Medicines
                                 </h2>
                                 {data.topMedicines.length === 0 ? (
-                                    <p
-                                        style={{
-                                            fontSize: "0.8125rem",
-                                            color: "var(--text-muted)",
-                                        }}
-                                    >
+                                    <p className="text-[0.8125rem] text-fg-muted">
                                         No data.
                                     </p>
                                 ) : (
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            gap: "0.5rem",
-                                        }}
-                                    >
+                                    <div className="flex flex-col gap-2">
                                         {data.topMedicines.map((med, i) => (
                                             <div
                                                 key={med.name}
-                                                style={{
-                                                    display: "flex",
-                                                    justifyContent: "space-between",
-                                                    alignItems: "center",
-                                                    padding: "0.5rem 0",
-                                                    borderBottom:
-                                                        i < data.topMedicines.length - 1
-                                                            ? "1px solid var(--border-light)"
-                                                            : "none",
-                                                }}
+                                                className={`flex justify-between items-center py-2
+                                                    ${i < data.topMedicines.length - 1 ? "border-b border-border" : ""}`}
                                             >
-                                                <div
-                                                    style={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        gap: "0.5rem",
-                                                    }}
-                                                >
-                                                    <span
-                                                        style={{
-                                                            fontSize: "0.6875rem",
-                                                            fontWeight: 600,
-                                                            color: "var(--text-muted)",
-                                                            width: "1.25rem",
-                                                        }}
-                                                    >
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[0.6875rem] font-semibold text-fg-muted w-5">
                                                         {i + 1}.
                                                     </span>
-                                                    <span
-                                                        style={{
-                                                            fontSize: "0.8125rem",
-                                                            color: "var(--text-primary)",
-                                                            textTransform: "capitalize",
-                                                        }}
-                                                    >
+                                                    <span className="text-[0.8125rem] text-fg capitalize">
                                                         {med.name}
                                                     </span>
                                                 </div>
-                                                <span
-                                                    style={{
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        color: "var(--blue-600)",
-                                                        background: "var(--blue-50)",
-                                                        padding: "0.125rem 0.5rem",
-                                                        borderRadius: "var(--radius-sm)",
-                                                    }}
-                                                >
+                                                <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
                                                     {med.totalQuantity} units
                                                 </span>
                                             </div>
@@ -686,34 +361,16 @@ export default function AnalyticsPage() {
                             </div>
 
                             {/* Employee Performance */}
-                            <div style={{ ...card, padding: "1.25rem" }}>
-                                <h2
-                                    style={{
-                                        fontSize: "0.875rem",
-                                        fontWeight: 600,
-                                        color: "var(--text-primary)",
-                                        marginBottom: "1rem",
-                                    }}
-                                >
+                            <div className={`${CARD} p-5`}>
+                                <h2 className="text-sm font-semibold text-fg mb-4">
                                     Employee Performance
                                 </h2>
                                 {data.byEmployee.length === 0 ? (
-                                    <p
-                                        style={{
-                                            fontSize: "0.8125rem",
-                                            color: "var(--text-muted)",
-                                        }}
-                                    >
+                                    <p className="text-[0.8125rem] text-fg-muted">
                                         No data.
                                     </p>
                                 ) : (
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            gap: "0.75rem",
-                                        }}
-                                    >
+                                    <div className="flex flex-col gap-3">
                                         {data.byEmployee.map((emp) => {
                                             const pct =
                                                 data.summary.totalRevenue > 0
@@ -721,56 +378,21 @@ export default function AnalyticsPage() {
                                                     : 0;
                                             return (
                                                 <div key={emp.username}>
-                                                    <div
-                                                        style={{
-                                                            display: "flex",
-                                                            justifyContent: "space-between",
-                                                            marginBottom: "0.25rem",
-                                                        }}
-                                                    >
-                                                        <span
-                                                            style={{
-                                                                fontSize: "0.8125rem",
-                                                                fontWeight: 500,
-                                                                color: "var(--text-primary)",
-                                                            }}
-                                                        >
+                                                    <div className="flex justify-between mb-1">
+                                                        <span className="text-[0.8125rem] font-medium text-fg">
                                                             {emp.name}
                                                         </span>
-                                                        <span
-                                                            style={{
-                                                                fontSize: "0.8125rem",
-                                                                fontWeight: 600,
-                                                                color: "var(--text-primary)",
-                                                            }}
-                                                        >
+                                                        <span className="text-[0.8125rem] font-semibold text-fg tabular-nums">
                                                             {formatCurrency(emp.total)}
                                                         </span>
                                                     </div>
-                                                    <div
-                                                        style={{
-                                                            height: "6px",
-                                                            background: "var(--bg-secondary)",
-                                                            borderRadius: "3px",
-                                                            overflow: "hidden",
-                                                        }}
-                                                    >
+                                                    <div className="h-1.5 bg-surface-secondary rounded overflow-hidden">
                                                         <div
-                                                            style={{
-                                                                width: `${pct}%`,
-                                                                height: "100%",
-                                                                background: "var(--green-500)",
-                                                                borderRadius: "3px",
-                                                                transition: "width 0.3s ease",
-                                                            }}
+                                                            className="h-full bg-green-500 rounded transition-[width] duration-300"
+                                                            style={{ width: `${pct}%` }}
                                                         />
                                                     </div>
-                                                    <span
-                                                        style={{
-                                                            fontSize: "0.6875rem",
-                                                            color: "var(--text-muted)",
-                                                        }}
-                                                    >
+                                                    <span className="text-[0.6875rem] text-fg-muted">
                                                         {emp.count} bill{emp.count !== 1 ? "s" : ""} ·{" "}
                                                         {pct.toFixed(0)}%
                                                     </span>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseISTDateParam, getISTDayBounds, toISTDateString } from "@/lib/utils";
 
 /**
  * GET /api/admin/analytics?from=YYYY-MM-DD&to=YYYY-MM-DD
@@ -19,16 +20,11 @@ export async function GET(req: NextRequest) {
         const toParam = searchParams.get("to");
 
         // Default: last 7 days
-        const now = new Date();
-        const to = toParam
-            ? new Date(`${toParam}T23:59:59.999+05:30`)
-            : new Date(
-                now.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) +
-                "T23:59:59.999+05:30"
-            );
-        const from = fromParam
-            ? new Date(`${fromParam}T00:00:00.000+05:30`)
-            : new Date(to.getTime() - 6 * 24 * 60 * 60 * 1000);
+        const parsedTo = parseISTDateParam(toParam);
+        const parsedFrom = parseISTDateParam(fromParam);
+
+        const to = parsedTo?.end ?? getISTDayBounds().end;
+        const from = parsedFrom?.start ?? new Date(to.getTime() - 6 * 24 * 60 * 60 * 1000);
 
         const where = {
             createdAt: { gte: from, lte: to },
@@ -76,9 +72,7 @@ export async function GET(req: NextRequest) {
             byPaymentMode[mode].total += gt;
 
             // By day (IST)
-            const dayStr = bill.createdAt.toLocaleDateString("en-CA", {
-                timeZone: "Asia/Kolkata",
-            });
+            const dayStr = toISTDateString(bill.createdAt);
             if (!byDay[dayStr])
                 byDay[dayStr] = { date: dayStr, revenue: 0, count: 0 };
             byDay[dayStr].revenue += gt;

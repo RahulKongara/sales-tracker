@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { PHARMACY_NAME } from "@/lib/constants";
 import { sendEmailWithRetry } from "@/lib/email-retry";
 import { getEmailConfig } from "@/lib/email-config";
+import { toIST } from "@/lib/utils";
 
 /**
  * POST /api/reports/monthly — Monthly sales report email.
@@ -21,14 +22,10 @@ export async function POST(req: Request) {
     try {
         // Current month bounds in IST
         const now = new Date();
-        const year = Number(
-            now.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata", year: "numeric" })
-        );
-        const monthStr = now.toLocaleDateString("en-CA", {
-            timeZone: "Asia/Kolkata",
-            month: "2-digit",
-        });
-        const month = Number(monthStr);
+        const IST_OFFSET_MS = 330 * 60 * 1000;
+        const istNow = new Date(now.getTime() + IST_OFFSET_MS);
+        const year = istNow.getUTCFullYear();
+        const month = istNow.getUTCMonth() + 1;
 
         const start = new Date(`${year}-${String(month).padStart(2, "0")}-01T00:00:00.000+05:30`);
         const nextMonth = month === 12 ? 1 : month + 1;
@@ -102,12 +99,8 @@ export async function POST(req: Request) {
         const weeklyData: Record<string, { revenue: number; count: number }> = {};
         for (const bill of bills) {
             const billDate = new Date(bill.createdAt);
-            const dayOfMonth = Number(
-                billDate.toLocaleDateString("en-CA", {
-                    timeZone: "Asia/Kolkata",
-                    day: "2-digit",
-                })
-            );
+            const istBillDate = toIST(billDate);
+            const dayOfMonth = istBillDate.getUTCDate();
             const weekNum = Math.ceil(dayOfMonth / 7);
             const weekKey = `Week ${weekNum}`;
             if (!weeklyData[weekKey]) weeklyData[weekKey] = { revenue: 0, count: 0 };

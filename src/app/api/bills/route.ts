@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { billSchema } from "@/lib/validators/bill";
 import { PRESCRIPTION_CHARGE } from "@/lib/constants";
-import { getISTDayBounds } from "@/lib/utils";
+import { getISTDayBounds, toISTDateString } from "@/lib/utils";
 
 /**
  * POST /api/bills — Create a new bill.
@@ -47,9 +47,7 @@ export async function POST(req: NextRequest) {
         });
 
         const now = new Date();
-        const istDateStr = now.toLocaleDateString("en-CA", {
-            timeZone: "Asia/Kolkata",
-        });
+        const istDateStr = toISTDateString(now);
         const [yyyy, mm, dd] = istDateStr.split("-");
         const seq = String(todayBillCount + 1).padStart(4, "0");
         const billNumber = `${yyyy}${mm}${dd}-${seq}`;

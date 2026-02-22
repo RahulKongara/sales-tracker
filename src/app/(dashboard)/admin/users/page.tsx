@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Types                                                        */
@@ -18,61 +17,9 @@ interface User {
     billCount: number;
 }
 
-/* ────────────────────────────────────────────────────────────── */
-/*  Styles                                                       */
-/* ────────────────────────────────────────────────────────────── */
-
-const card: React.CSSProperties = {
-    background: "var(--bg-primary)",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius-lg)",
-    boxShadow: "var(--shadow-sm)",
-};
-
-const btnPrimary: React.CSSProperties = {
-    padding: "0.5rem 1rem",
-    fontSize: "0.8125rem",
-    fontWeight: 600,
-    color: "#fff",
-    background: "var(--blue-600)",
-    border: "none",
-    borderRadius: "var(--radius)",
-    cursor: "pointer",
-    transition: "opacity 0.15s",
-};
-
-const btnSecondary: React.CSSProperties = {
-    padding: "0.5rem 0.75rem",
-    fontSize: "0.8125rem",
-    fontWeight: 500,
-    color: "var(--text-secondary)",
-    background: "var(--bg-secondary)",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius)",
-    cursor: "pointer",
-};
-
-const btnSmall: React.CSSProperties = {
-    padding: "0.25rem 0.5rem",
-    fontSize: "0.6875rem",
-    fontWeight: 500,
-    borderRadius: "var(--radius-sm)",
-    cursor: "pointer",
-    border: "1px solid var(--border-default)",
-    background: "var(--bg-secondary)",
-    color: "var(--text-secondary)",
-};
-
-const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "0.5rem 0.75rem",
-    fontSize: "0.8125rem",
-    border: "1px solid var(--border-default)",
-    borderRadius: "var(--radius)",
-    background: "var(--bg-primary)",
-    color: "var(--text-primary)",
-    outline: "none",
-};
+/* shared input classes */
+const INPUT_CLS =
+    "w-full px-3 py-2 text-[0.8125rem] border border-border rounded-lg bg-surface text-fg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-150";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Component                                                    */
@@ -191,105 +138,34 @@ export default function UsersPage() {
     }
 
     return (
-        <div style={{ minHeight: "100vh", background: "var(--bg-secondary)" }}>
-            {/* ── Header ──────────────────────────────────────────── */}
-            <header
-                style={{
-                    background: "var(--bg-primary)",
-                    borderBottom: "1px solid var(--border-default)",
-                    padding: "0.75rem 1.5rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                }}
-            >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <span style={{ fontSize: "1.25rem" }}>👥</span>
-                    <h1
-                        style={{
-                            fontSize: "1rem",
-                            fontWeight: 600,
-                            color: "var(--text-primary)",
-                            letterSpacing: "-0.01em",
-                        }}
-                    >
-                        User Management
-                    </h1>
-                </div>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button
-                        onClick={() => router.push("/admin/dashboard")}
-                        style={{
-                            ...btnSecondary,
-                            fontSize: "0.75rem",
-                            padding: "0.375rem 0.75rem",
-                        }}
-                    >
-                        ← Dashboard
-                    </button>
-                    <button
-                        onClick={() => signOut({ callbackUrl: "/login" })}
-                        style={{
-                            ...btnSecondary,
-                            fontSize: "0.75rem",
-                            padding: "0.375rem 0.75rem",
-                        }}
-                    >
-                        Sign Out
-                    </button>
-                </div>
-            </header>
+        <div className="min-h-screen bg-surface-secondary">
 
-            <div style={{ maxWidth: "900px", margin: "0 auto", padding: "1.5rem" }}>
+            <div className="max-w-[900px] mx-auto p-6">
                 {/* ── Add User Button ────────────────────────────────── */}
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        marginBottom: "1rem",
-                    }}
-                >
-                    <button onClick={() => setShowForm(!showForm)} style={btnPrimary}>
+                <div className="flex justify-end mb-4">
+                    <button
+                        onClick={() => setShowForm(!showForm)}
+                        className="px-4 py-2 text-[0.8125rem] font-semibold text-white bg-blue-600 border-none rounded-lg
+                                   cursor-pointer hover:bg-blue-700 active:scale-[0.98] transition-all duration-150"
+                    >
                         {showForm ? "Cancel" : "+ Add Employee"}
                     </button>
                 </div>
 
                 {/* ── Add User Form ──────────────────────────────────── */}
                 {showForm && (
-                    <div style={{ ...card, padding: "1.25rem", marginBottom: "1.5rem" }}>
-                        <h2
-                            style={{
-                                fontSize: "0.875rem",
-                                fontWeight: 600,
-                                color: "var(--text-primary)",
-                                marginBottom: "1rem",
-                            }}
-                        >
+                    <div className="bg-surface border border-border rounded-lg shadow-sm p-5 mb-6">
+                        <h2 className="text-sm font-semibold text-fg mb-4">
                             New Employee
                         </h2>
                         <form onSubmit={handleCreate}>
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "1fr 1fr",
-                                    gap: "0.75rem",
-                                    marginBottom: "0.75rem",
-                                }}
-                            >
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                                 <div>
-                                    <label
-                                        style={{
-                                            display: "block",
-                                            fontSize: "0.75rem",
-                                            fontWeight: 500,
-                                            color: "var(--text-secondary)",
-                                            marginBottom: "0.25rem",
-                                        }}
-                                    >
+                                    <label className="block text-xs font-medium text-fg-secondary mb-1">
                                         Full Name *
                                     </label>
                                     <input
-                                        style={inputStyle}
+                                        className={INPUT_CLS}
                                         value={formData.fullName}
                                         onChange={(e) =>
                                             setFormData({ ...formData, fullName: e.target.value })
@@ -299,19 +175,11 @@ export default function UsersPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label
-                                        style={{
-                                            display: "block",
-                                            fontSize: "0.75rem",
-                                            fontWeight: 500,
-                                            color: "var(--text-secondary)",
-                                            marginBottom: "0.25rem",
-                                        }}
-                                    >
+                                    <label className="block text-xs font-medium text-fg-secondary mb-1">
                                         Username *
                                     </label>
                                     <input
-                                        style={inputStyle}
+                                        className={INPUT_CLS}
                                         value={formData.username}
                                         onChange={(e) =>
                                             setFormData({ ...formData, username: e.target.value })
@@ -321,19 +189,11 @@ export default function UsersPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label
-                                        style={{
-                                            display: "block",
-                                            fontSize: "0.75rem",
-                                            fontWeight: 500,
-                                            color: "var(--text-secondary)",
-                                            marginBottom: "0.25rem",
-                                        }}
-                                    >
+                                    <label className="block text-xs font-medium text-fg-secondary mb-1">
                                         Password *
                                     </label>
                                     <input
-                                        style={inputStyle}
+                                        className={INPUT_CLS}
                                         type="password"
                                         value={formData.password}
                                         onChange={(e) =>
@@ -345,19 +205,11 @@ export default function UsersPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label
-                                        style={{
-                                            display: "block",
-                                            fontSize: "0.75rem",
-                                            fontWeight: 500,
-                                            color: "var(--text-secondary)",
-                                            marginBottom: "0.25rem",
-                                        }}
-                                    >
+                                    <label className="block text-xs font-medium text-fg-secondary mb-1">
                                         Role
                                     </label>
                                     <select
-                                        style={{ ...inputStyle, cursor: "pointer" }}
+                                        className={`${INPUT_CLS} cursor-pointer`}
                                         value={formData.role}
                                         onChange={(e) =>
                                             setFormData({ ...formData, role: e.target.value })
@@ -369,20 +221,14 @@ export default function UsersPage() {
                                 </div>
                             </div>
                             {formError && (
-                                <p
-                                    style={{
-                                        color: "var(--red-600)",
-                                        fontSize: "0.75rem",
-                                        marginBottom: "0.5rem",
-                                    }}
-                                >
-                                    {formError}
-                                </p>
+                                <p className="text-red-600 text-xs mb-2">{formError}</p>
                             )}
                             <button
                                 type="submit"
                                 disabled={submitting}
-                                style={{ ...btnPrimary, opacity: submitting ? 0.6 : 1 }}
+                                className="px-4 py-2 text-[0.8125rem] font-semibold text-white bg-blue-600 border-none rounded-lg
+                                           cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed
+                                           hover:bg-blue-700 active:scale-[0.98] transition-all duration-150"
                             >
                                 {submitting ? "Creating..." : "Create Employee"}
                             </button>
@@ -391,257 +237,153 @@ export default function UsersPage() {
                 )}
 
                 {/* ── Users Table ────────────────────────────────────── */}
-                <div style={{ ...card, overflow: "hidden" }}>
-                    <div
-                        style={{
-                            padding: "1rem 1.25rem",
-                            borderBottom: "1px solid var(--border-default)",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                        }}
-                    >
-                        <h2
-                            style={{
-                                fontSize: "0.875rem",
-                                fontWeight: 600,
-                                color: "var(--text-primary)",
-                            }}
-                        >
+                <div className="bg-surface border border-border rounded-lg shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-border flex justify-between items-center">
+                        <h2 className="text-sm font-semibold text-fg">
                             All Users ({users.length})
                         </h2>
                         <button
                             onClick={fetchUsers}
-                            style={{
-                                ...btnSecondary,
-                                fontSize: "0.6875rem",
-                                padding: "0.25rem 0.5rem",
-                            }}
+                            className="px-2 py-1 text-[0.6875rem] font-medium text-fg-secondary bg-surface-secondary
+                                       border border-border rounded-lg cursor-pointer
+                                       hover:bg-surface-tertiary hover:text-fg transition-colors duration-150"
                         >
                             ↻ Refresh
                         </button>
                     </div>
 
                     {loading ? (
-                        <div
-                            style={{
-                                padding: "3rem",
-                                textAlign: "center",
-                                color: "var(--text-muted)",
-                                fontSize: "0.875rem",
-                            }}
-                        >
+                        <div className="p-12 text-center text-fg-muted text-sm">
                             Loading...
                         </div>
                     ) : error ? (
-                        <div
-                            style={{
-                                padding: "3rem",
-                                textAlign: "center",
-                                color: "var(--red-600)",
-                                fontSize: "0.875rem",
-                            }}
-                        >
+                        <div className="p-12 text-center text-red-600 text-sm">
                             {error}
                         </div>
                     ) : (
-                        <table
-                            style={{
-                                width: "100%",
-                                borderCollapse: "collapse",
-                                fontSize: "0.8125rem",
-                            }}
-                        >
-                            <thead>
-                                <tr
-                                    style={{
-                                        borderBottom: "1px solid var(--border-default)",
-                                    }}
-                                >
-                                    {["Name", "Username", "Role", "Status", "Bills", "Actions"].map(
-                                        (h) => (
-                                            <th
-                                                key={h}
-                                                style={{
-                                                    padding: "0.625rem 0.75rem",
-                                                    textAlign: "left",
-                                                    fontWeight: 600,
-                                                    color: "var(--text-secondary)",
-                                                    fontSize: "0.75rem",
-                                                    textTransform: "uppercase",
-                                                    letterSpacing: "0.05em",
-                                                }}
-                                            >
-                                                {h}
-                                            </th>
-                                        )
-                                    )}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {users.map((user) => (
-                                    <tr
-                                        key={user.id}
-                                        style={{
-                                            borderBottom: "1px solid var(--border-light)",
-                                            opacity: user.isActive ? 1 : 0.5,
-                                        }}
-                                    >
-                                        <td
-                                            style={{
-                                                padding: "0.625rem 0.75rem",
-                                                fontWeight: 500,
-                                                color: "var(--text-primary)",
-                                            }}
-                                        >
-                                            {user.fullName}
-                                        </td>
-                                        <td
-                                            style={{
-                                                padding: "0.625rem 0.75rem",
-                                                fontFamily: "var(--font-mono)",
-                                                color: "var(--text-secondary)",
-                                            }}
-                                        >
-                                            {user.username}
-                                        </td>
-                                        <td style={{ padding: "0.625rem 0.75rem" }}>
-                                            <span
-                                                style={{
-                                                    padding: "0.125rem 0.5rem",
-                                                    borderRadius: "var(--radius-sm)",
-                                                    fontSize: "0.6875rem",
-                                                    fontWeight: 600,
-                                                    background:
-                                                        user.role === "ADMIN" ? "#EFF6FF" : "#F0FDF4",
-                                                    color:
-                                                        user.role === "ADMIN" ? "#2563EB" : "#16A34A",
-                                                }}
-                                            >
-                                                {user.role}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: "0.625rem 0.75rem" }}>
-                                            <span
-                                                style={{
-                                                    display: "inline-block",
-                                                    width: "8px",
-                                                    height: "8px",
-                                                    borderRadius: "50%",
-                                                    background: user.isActive ? "#16A34A" : "#DC2626",
-                                                    marginRight: "0.375rem",
-                                                }}
-                                            />
-                                            <span
-                                                style={{
-                                                    fontSize: "0.75rem",
-                                                    color: "var(--text-secondary)",
-                                                }}
-                                            >
-                                                {user.isActive ? "Active" : "Inactive"}
-                                            </span>
-                                        </td>
-                                        <td
-                                            style={{
-                                                padding: "0.625rem 0.75rem",
-                                                color: "var(--text-secondary)",
-                                            }}
-                                        >
-                                            {user.billCount}
-                                        </td>
-                                        <td style={{ padding: "0.625rem 0.75rem" }}>
-                                            <div style={{ display: "flex", gap: "0.375rem" }}>
-                                                <button
-                                                    onClick={() => toggleActive(user)}
-                                                    disabled={actionId === user.id}
-                                                    style={{
-                                                        ...btnSmall,
-                                                        color: user.isActive
-                                                            ? "var(--red-600)"
-                                                            : "var(--green-600)",
-                                                        background: user.isActive
-                                                            ? "var(--red-50)"
-                                                            : "#F0FDF4",
-                                                    }}
+                        <div className="overflow-x-auto">
+                            <table className="w-full border-collapse text-[0.8125rem]">
+                                <thead>
+                                    <tr className="border-b border-border">
+                                        {["Name", "Username", "Role", "Status", "Bills", "Actions"].map(
+                                            (h) => (
+                                                <th
+                                                    key={h}
+                                                    className="px-3 py-2.5 text-left font-semibold text-fg-secondary text-xs uppercase tracking-wider"
                                                 >
-                                                    {user.isActive ? "Deactivate" : "Activate"}
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setResetTarget(user);
-                                                        setNewPassword("");
-                                                    }}
-                                                    style={btnSmall}
-                                                >
-                                                    Reset PW
-                                                </button>
-                                            </div>
-                                        </td>
+                                                    {h}
+                                                </th>
+                                            )
+                                        )}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {users.map((user) => (
+                                        <tr
+                                            key={user.id}
+                                            className={`border-b border-border last:border-b-0 hover:bg-surface-secondary transition-colors duration-100
+                                                        ${user.isActive ? "" : "opacity-50"}`}
+                                        >
+                                            <td className="px-3 py-2.5 font-medium text-fg">
+                                                {user.fullName}
+                                            </td>
+                                            <td className="px-3 py-2.5 font-mono text-fg-secondary">
+                                                {user.username}
+                                            </td>
+                                            <td className="px-3 py-2.5">
+                                                <span
+                                                    className={`px-2 py-0.5 rounded text-[0.6875rem] font-semibold
+                                                        ${user.role === "ADMIN"
+                                                            ? "bg-blue-50 text-blue-600"
+                                                            : "bg-green-50 text-green-600"
+                                                        }`}
+                                                >
+                                                    {user.role}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-2.5">
+                                                <span
+                                                    className={`inline-block w-2 h-2 rounded-full mr-1.5
+                                                        ${user.isActive ? "bg-green-600" : "bg-red-600"}`}
+                                                />
+                                                <span className="text-xs text-fg-secondary">
+                                                    {user.isActive ? "Active" : "Inactive"}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-2.5 text-fg-secondary tabular-nums">
+                                                {user.billCount}
+                                            </td>
+                                            <td className="px-3 py-2.5">
+                                                <div className="flex gap-1.5">
+                                                    <button
+                                                        onClick={() => toggleActive(user)}
+                                                        disabled={actionId === user.id}
+                                                        className={`px-2 py-1 text-[0.6875rem] font-medium rounded cursor-pointer border-none
+                                                                    transition-colors duration-150
+                                                                    ${user.isActive
+                                                                ? "bg-red-50 text-red-600 hover:bg-red-100"
+                                                                : "bg-green-50 text-green-600 hover:bg-green-100"
+                                                            }`}
+                                                    >
+                                                        {user.isActive ? "Deactivate" : "Activate"}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setResetTarget(user);
+                                                            setNewPassword("");
+                                                        }}
+                                                        className="px-2 py-1 text-[0.6875rem] font-medium text-fg-secondary bg-surface-secondary
+                                                                   border border-border rounded cursor-pointer
+                                                                   hover:bg-surface-tertiary hover:text-fg transition-colors duration-150"
+                                                    >
+                                                        Reset PW
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
 
                 {/* ── Reset Password Modal ───────────────────────────── */}
                 {resetTarget && (
                     <div
-                        style={{
-                            position: "fixed",
-                            inset: 0,
-                            background: "rgba(0,0,0,0.4)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            zIndex: 50,
-                        }}
+                        className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
                         onClick={() => setResetTarget(null)}
                     >
                         <div
-                            style={{
-                                ...card,
-                                padding: "1.5rem",
-                                width: "100%",
-                                maxWidth: "400px",
-                            }}
+                            className="bg-surface border border-border rounded-lg shadow-sm p-6 w-full max-w-[400px]"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <h3
-                                style={{
-                                    fontSize: "0.9375rem",
-                                    fontWeight: 600,
-                                    color: "var(--text-primary)",
-                                    marginBottom: "0.75rem",
-                                }}
-                            >
+                            <h3 className="text-[0.9375rem] font-semibold text-fg mb-3">
                                 Reset Password for {resetTarget.fullName}
                             </h3>
                             <input
                                 type="password"
-                                style={{ ...inputStyle, marginBottom: "0.75rem" }}
+                                className={`${INPUT_CLS} mb-3`}
                                 placeholder="New password (min 6 chars)"
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 autoFocus
                             />
-                            <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <div className="flex gap-2">
                                 <button
                                     onClick={handleResetPassword}
                                     disabled={newPassword.length < 6 || actionId === resetTarget.id}
-                                    style={{
-                                        ...btnPrimary,
-                                        opacity:
-                                            newPassword.length < 6 || actionId === resetTarget.id
-                                                ? 0.5
-                                                : 1,
-                                    }}
+                                    className="px-4 py-2 text-[0.8125rem] font-semibold text-white bg-blue-600 border-none rounded-lg
+                                               cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
+                                               hover:bg-blue-700 transition-all duration-150"
                                 >
                                     {actionId === resetTarget.id ? "Resetting..." : "Reset"}
                                 </button>
                                 <button
                                     onClick={() => setResetTarget(null)}
-                                    style={btnSecondary}
+                                    className="px-3 py-2 text-[0.8125rem] font-medium text-fg-secondary bg-surface-secondary
+                                               border border-border rounded-lg cursor-pointer
+                                               hover:bg-surface-tertiary hover:text-fg transition-colors duration-150"
                                 >
                                     Cancel
                                 </button>
