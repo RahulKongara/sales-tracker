@@ -40,12 +40,12 @@ const MOBILE_BAR_ITEMS: NavItem[] = [
     NAV_ITEMS[0], // Dashboard
     NAV_ITEMS[1], // Analytics
     // ── center "New Bill" button goes here ──
-    NAV_ITEMS[3], // Users
+    NAV_ITEMS[2], // Users
 ];
 
 /* Items that go into the "More" dropdown on mobile */
 const MOBILE_MORE_ITEMS: NavItem[] = [
-    NAV_ITEMS[2], // Activity
+    NAV_ITEMS[3], // Activity
     NAV_ITEMS[4], // Config
 ];
 
@@ -169,7 +169,7 @@ export default function AdminSidebar() {
                                 href={item.href}
                                 className={`
                                     flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg
-                                    transition-colors duration-150 min-w-[52px]
+                                    transition-colors duration-150 min-w-13
                                     ${isActive
                                         ? "text-fg"
                                         : "text-fg-muted hover:text-fg-secondary"
