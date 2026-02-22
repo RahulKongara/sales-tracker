@@ -101,12 +101,12 @@ export default function EmailConfigPage() {
 
             <div className="max-w-[600px] mx-auto p-6">
                 {loading ? (
-                    <div className="bg-surface border border-border rounded-lg shadow-sm p-6 text-center text-fg-muted">
+                    <div className="glass-card p-6 text-center text-fg-muted">
                         Loading...
                     </div>
                 ) : (
                     <form onSubmit={handleSave}>
-                        <div className="bg-surface border border-border rounded-lg shadow-sm p-6">
+                        <div className="glass-card p-6">
                             <h2 className="text-[0.9375rem] font-bold text-fg mb-1">
                                 Email Report Settings
                             </h2>
@@ -192,8 +192,8 @@ export default function EmailConfigPage() {
                                 <div
                                     className={`px-3 py-2 rounded-lg text-[0.8125rem] font-medium mb-4 border
                                         ${message.type === "ok"
-                                            ? "bg-green-50 text-green-600 border-green-500"
-                                            : "bg-red-50 text-red-600 border-red-500"
+                                            ? "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30"
+                                            : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30"
                                         }`}
                                 >
                                     {message.text}
@@ -224,7 +224,7 @@ export default function EmailConfigPage() {
                         </div>
 
                         {/* Info Card */}
-                        <div className="bg-surface-secondary border border-border rounded-lg shadow-sm p-6 mt-4">
+                        <div className="glass-card p-6 mt-4">
                             <h3 className="text-[0.8125rem] font-semibold text-fg-secondary mb-2">
                                 📬 How Reports Work
                             </h3>

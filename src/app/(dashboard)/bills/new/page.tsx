@@ -231,18 +231,18 @@ export default function NewBillPage() {
                 <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
                     {/* Success / Error Messages */}
                     {successMsg && (
-                        <div className="bg-green-50 border border-green-500 rounded-lg px-3 py-2.5 sm:px-4 sm:py-3 text-sm font-medium text-green-700">
+                        <div className="bg-green-50 dark:bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-2.5 sm:px-4 sm:py-3 text-sm font-medium text-green-700 dark:text-green-400">
                             ✓ {successMsg}
                         </div>
                     )}
                     {errorMsg && (
-                        <div className="bg-red-50 border border-red-500 rounded-lg px-3 py-2.5 sm:px-4 sm:py-3 text-sm font-medium text-red-600">
+                        <div className="bg-red-50 dark:bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2.5 sm:px-4 sm:py-3 text-sm font-medium text-red-600 dark:text-red-400">
                             ✕ {errorMsg}
                         </div>
                     )}
 
                     {/* ── Line Items Card ──────────────────────── */}
-                    <div className="bg-surface border border-border rounded-xl shadow-sm p-3 sm:p-5">
+                    <div className="glass-card p-3 sm:p-5">
                         <div className="flex justify-between items-center mb-3 sm:mb-4">
                             <h2 className="text-sm font-semibold text-fg">Medicines</h2>
                             <button
@@ -381,7 +381,7 @@ export default function NewBillPage() {
                     </div>
 
                     {/* ── Customer & Payment Card ──────────────── */}
-                    <div className="bg-surface border border-border rounded-xl shadow-sm p-3 sm:p-5">
+                    <div className="glass-card p-3 sm:p-5">
                         <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4">
                             {/* Customer Name */}
                             <div>
@@ -448,7 +448,7 @@ export default function NewBillPage() {
                     </div>
 
                     {/* ── Totals Card (Desktop only — mobile uses sticky bottom) ── */}
-                    <div className="hidden md:block bg-surface border border-border rounded-xl shadow-sm p-5">
+                    <div className="hidden md:block glass-card p-5">
                         <div className="flex justify-between mb-2 text-[0.8125rem] text-fg-secondary">
                             <span>Medicines Subtotal</span>
                             <span className="tabular-nums">{formatCurrency(medicinesSubtotal)}</span>
@@ -517,7 +517,7 @@ export default function NewBillPage() {
 
                 {/* ── Right: Today's Bills ─────────────────────── */}
                 <aside className="order-last">
-                    <div className="bg-surface border border-border rounded-xl shadow-sm sticky top-[57px]">
+                    <div className="glass-card sticky top-[57px]">
                         {/* Collapsible header on mobile, always open on md+ */}
                         <button
                             type="button"

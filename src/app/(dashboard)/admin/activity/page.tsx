@@ -80,7 +80,7 @@ interface Employee {
 /*  Shared classes                                               */
 /* ────────────────────────────────────────────────────────────── */
 
-const CARD = "bg-surface border border-border rounded-lg shadow-sm";
+const CARD = "glass-card";
 const BTN_SM =
     "px-3 py-1.5 text-xs font-medium text-fg-secondary bg-surface-secondary border border-border rounded-lg cursor-pointer hover:bg-surface-tertiary hover:text-fg transition-colors duration-150";
 const BTN_SM_ACTIVE =

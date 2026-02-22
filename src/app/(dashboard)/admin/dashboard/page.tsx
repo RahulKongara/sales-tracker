@@ -37,10 +37,108 @@ interface DashboardStats {
 }
 
 /* ────────────────────────────────────────────────────────────── */
+/*  Payment Stream Area Chart                                    */
+/* ────────────────────────────────────────────────────────────── */
+
+const CHART_COLORS = ["#10B981", "#0EA5E9"];
+
+function PaymentStreamChart({ bills }: { bills: DashboardBill[] }) {
+    if (!bills.length) return null;
+
+    const sorted = [...bills].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+
+    // Build two cumulative series: Cash+Card vs Paytm
+    let cashCardRunning = 0;
+    let paytmRunning = 0;
+    const cashCardValues: number[] = [];
+    const paytmValues: number[] = [];
+
+    for (const bill of sorted) {
+        if (bill.paymentMode === "PAYTM") {
+            paytmRunning += bill.grandTotal;
+        } else {
+            cashCardRunning += bill.grandTotal;
+        }
+        cashCardValues.push(cashCardRunning);
+        paytmValues.push(paytmRunning);
+    }
+
+    const series = [cashCardValues, paytmValues];
+    const numPoints = cashCardValues.length;
+    const maxVal = Math.max(...cashCardValues, ...paytmValues, 1);
+
+    const width = 600;
+    const height = 180;
+    const pad = { top: 10, right: 10, bottom: 10, left: 10 };
+    const chartW = width - pad.left - pad.right;
+    const chartH = height - pad.top - pad.bottom;
+
+    function toPath(values: number[]): string {
+        return values
+            .map((v, i) => {
+                const x = pad.left + (numPoints === 1 ? chartW / 2 : (i / (numPoints - 1)) * chartW);
+                const y = pad.top + chartH - (v / maxVal) * chartH;
+                return `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
+            })
+            .join(" ");
+    }
+
+    function toAreaPath(values: number[]): string {
+        const line = toPath(values);
+        const lastX = numPoints === 1 ? pad.left + chartW / 2 : pad.left + chartW;
+        const firstX = numPoints === 1 ? pad.left + chartW / 2 : pad.left;
+        const baseY = pad.top + chartH;
+        return `${line} L ${lastX.toFixed(1)} ${baseY} L ${firstX.toFixed(1)} ${baseY} Z`;
+    }
+
+    return (
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+            <defs>
+                {CHART_COLORS.map((color, i) => (
+                    <linearGradient key={i} id={`stream-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+                        <stop offset="100%" stopColor={color} stopOpacity={0.05} />
+                    </linearGradient>
+                ))}
+            </defs>
+
+            {/* Grid lines */}
+            {[0, 0.5, 1].map((frac) => {
+                const y = pad.top + chartH * (1 - frac);
+                return (
+                    <line
+                        key={frac}
+                        x1={pad.left} y1={y}
+                        x2={pad.left + chartW} y2={y}
+                        stroke="var(--border-default)" strokeWidth={0.5}
+                        strokeDasharray={frac === 0 ? undefined : "4 4"}
+                    />
+                );
+            })}
+
+            {/* Area fills */}
+            {series.map((values, i) => (
+                <path key={`area-${i}`} d={toAreaPath(values)} fill={`url(#stream-grad-${i})`} />
+            ))}
+
+            {/* Lines */}
+            {series.map((values, i) => (
+                <path
+                    key={`line-${i}`} d={toPath(values)}
+                    fill="none" stroke={CHART_COLORS[i]} strokeWidth={2}
+                    strokeLinecap="round" strokeLinejoin="round"
+                />
+            ))}
+        </svg>
+    );
+}
+
+/* ────────────────────────────────────────────────────────────── */
 /*  Component                                                    */
 /* ────────────────────────────────────────────────────────────── */
 
-// Helper: today's date in IST as YYYY-MM-DD
 function todayIST() {
     return toISTDateString();
 }
@@ -124,43 +222,50 @@ export default function AdminDashboard() {
         <div className="min-h-screen bg-surface-secondary">
 
             {/* ── Content ─────────────────────────────────────────── */}
-            <div className="max-w-[1100px] mx-auto p-6">
+            <div className="max-w-275 mx-auto p-6">
 
-                {/* ── Date Picker Row ──────────────────────────────── */}
-                <div className="flex items-center gap-3 mb-4">
-                    <label className="text-[0.8125rem] font-semibold text-fg-secondary">
-                        📅 View date:
-                    </label>
-                    <input
-                        type="date"
-                        value={selectedDate}
-                        max={todayIST()}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                        className="px-3 py-2 text-[0.8125rem] font-mono text-fg-secondary bg-surface-secondary
-                                   border border-border rounded-lg cursor-pointer
-                                   outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-150"
-                    />
-                    {!isToday && (
-                        <button
-                            onClick={() => setSelectedDate(todayIST())}
-                            className="px-3 py-1.5 text-xs font-medium text-fg-secondary bg-surface-secondary
+                {/* ── Liquid Glass Header + Date Picker ─────────────── */}
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 className="text-2xl font-bold text-fg tracking-tight">
+                            Liquid Glass
+                        </h1>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <label className="text-[0.8125rem] font-medium text-fg-secondary hidden sm:inline">
+                            View date:
+                        </label>
+                        <input
+                            type="date"
+                            value={selectedDate}
+                            max={todayIST()}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className="px-3 py-2 text-[0.8125rem] font-mono text-fg-secondary bg-surface
                                        border border-border rounded-lg cursor-pointer
-                                       hover:bg-surface-tertiary hover:text-fg transition-colors duration-150"
-                        >
-                            ← Back to Today
-                        </button>
-                    )}
-                    {isToday && (
-                        <span className="text-[0.6875rem] text-fg-muted">
-                            Auto-refreshes every 30s
-                        </span>
-                    )}
+                                       outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-150"
+                        />
+                        {!isToday && (
+                            <button
+                                onClick={() => setSelectedDate(todayIST())}
+                                className="px-3 py-1.5 text-xs font-medium text-fg-secondary bg-surface-secondary
+                                           border border-border rounded-lg cursor-pointer
+                                           hover:bg-surface-tertiary hover:text-fg transition-colors duration-150"
+                            >
+                                Back to Today
+                            </button>
+                        )}
+                        {isToday && (
+                            <span className="text-[0.6875rem] text-fg-muted hidden sm:inline">
+                                Auto-refreshes every 30s
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 {/* ── Stats Cards Row ─────────────────────────────────── */}
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-6">
                     {/* Total Revenue */}
-                    <div className="bg-surface border border-border rounded-lg shadow-sm p-5">
+                    <div className="glass-card-primary p-5">
                         <p className="text-xs font-medium text-fg-muted mb-1 uppercase tracking-wider">
                             {dateLabel}&apos;s Revenue
                         </p>
@@ -178,7 +283,7 @@ export default function AdminDashboard() {
                         const amount = stats?.byPaymentMode[mode] || 0;
                         const count = stats?.billCountByMode[mode] || 0;
                         return (
-                            <div key={mode} className="bg-surface border border-border rounded-lg shadow-sm p-5">
+                            <div key={mode} className="glass-card p-5">
                                 <p className="text-xs font-medium text-fg-muted mb-1 uppercase tracking-wider">
                                     {config.label}
                                 </p>
@@ -195,72 +300,43 @@ export default function AdminDashboard() {
                         );
                     })}
                     {/* Prescription Summary */}
-                    <div className="bg-surface border border-border rounded-lg shadow-sm p-5">
+                    <div className="glass-card p-5">
                         <p className="text-xs font-medium text-fg-muted mb-1 uppercase tracking-wider">
                             Prescriptions
                         </p>
-                        <p className="text-2xl font-bold text-blue-600 tracking-tight tabular-nums">
-                            {stats?.prescriptionCount || 0} Rx
+                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 tracking-tight tabular-nums">
+                            {formatCurrency(stats?.totalPrescriptionCharges || 0)}
                         </p>
                         <p className="text-xs text-fg-muted mt-1">
-                            {stats?.nonPrescriptionCount || 0} OTC · {formatCurrency(stats?.totalPrescriptionCharges || 0)} charges
+                            {stats?.prescriptionCount || 0} Rx · {stats?.nonPrescriptionCount || 0} OTC
                         </p>
                     </div>
                 </div>
 
-                {/* ── Payment Stream Proportion Bar ────────────────── */}
-                {(stats?.totalRevenue || 0) > 0 && (
-                    <div className="bg-surface border border-border rounded-lg shadow-sm px-5 py-4 mb-6">
-                        <p className="text-xs font-semibold text-fg-secondary mb-2 uppercase tracking-wider">
-                            Payment Stream
-                        </p>
-                        <div className="flex rounded-lg overflow-hidden h-7">
-                            {paymentModes.map((mode) => {
-                                const amount = stats?.byPaymentMode[mode] || 0;
-                                const pct = stats?.totalRevenue
-                                    ? (amount / stats.totalRevenue) * 100
-                                    : 0;
-                                if (pct === 0) return null;
-                                const config = PAYMENT_MODE_CONFIG[mode];
-                                return (
-                                    <div
-                                        key={mode}
-                                        title={`${config.label}: ${formatCurrency(amount)} (${pct.toFixed(1)}%)`}
-                                        className="flex items-center justify-center text-white text-[0.6875rem] font-semibold overflow-hidden transition-[width] duration-300"
-                                        style={{
-                                            width: `${pct}%`,
-                                            background: config.color,
-                                            minWidth: pct > 8 ? "auto" : "0",
-                                        }}
-                                    >
-                                        {pct > 12 ? `${config.label} ${pct.toFixed(0)}%` : ""}
-                                    </div>
-                                );
-                            })}
+                {/* ── Payment Stream Area Chart ──────────────────────── */}
+                {(stats?.bills?.length || 0) > 0 && (
+                    <div className="glass-card px-5 py-4 mb-6">
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="text-xs font-semibold text-fg-secondary uppercase tracking-wider">
+                                Payment Stream
+                            </p>
+                            <div className="flex gap-3">
+                                <span className="flex items-center gap-1.5 text-xs text-fg-secondary">
+                                    <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: CHART_COLORS[0] }} />
+                                    #10B981
+                                </span>
+                                <span className="flex items-center gap-1.5 text-xs text-fg-secondary">
+                                    <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: CHART_COLORS[1] }} />
+                                    #0EA5E9
+                                </span>
+                            </div>
                         </div>
-                        <div className="flex gap-4 mt-2 flex-wrap">
-                            {paymentModes.map((mode) => {
-                                const amount = stats?.byPaymentMode[mode] || 0;
-                                const config = PAYMENT_MODE_CONFIG[mode];
-                                return (
-                                    <span
-                                        key={mode}
-                                        className="text-xs text-fg-secondary flex items-center gap-1.5"
-                                    >
-                                        <span
-                                            className="inline-block w-2.5 h-2.5 rounded-sm"
-                                            style={{ background: config.color }}
-                                        />
-                                        {config.label}: {formatCurrency(amount)}
-                                    </span>
-                                );
-                            })}
-                        </div>
+                        <PaymentStreamChart bills={stats!.bills} />
                     </div>
                 )}
 
                 {/* ── Bills Table ────────────────────────────────────── */}
-                <div className="bg-surface border border-border rounded-lg shadow-sm overflow-hidden">
+                <div className="glass-table">
                     <div className="px-5 py-4 border-b border-border flex justify-between items-center">
                         <h2 className="text-sm font-semibold text-fg">
                             {dateLabel}&apos;s Bills ({stats?.bills.length || 0})
@@ -271,7 +347,7 @@ export default function AdminDashboard() {
                                        border border-border rounded-lg cursor-pointer
                                        hover:bg-surface-tertiary hover:text-fg transition-colors duration-150"
                         >
-                            ↻ Refresh
+                            Refresh
                         </button>
                     </div>
 
@@ -340,7 +416,7 @@ export default function AdminDashboard() {
                                                     </span>
                                                 </td>
                                                 <td className="px-3 py-2.5 text-fg-secondary">
-                                                    {bill.hasPrescription ? "📋" : "—"}
+                                                    {bill.hasPrescription ? "Rx" : "\u2014"}
                                                 </td>
                                                 <td className="px-3 py-2.5 font-semibold text-fg whitespace-nowrap tabular-nums">
                                                     {formatCurrency(bill.grandTotal)}
@@ -352,9 +428,11 @@ export default function AdminDashboard() {
                                                     <div className="flex gap-1.5">
                                                         <Link
                                                             href={`/bills/${bill.id}/edit`}
-                                                            className="px-2.5 py-1.5 text-xs font-medium text-blue-600 bg-blue-50
-                                                                       border border-blue-500 rounded-lg no-underline
-                                                                       hover:bg-blue-100 transition-colors duration-150"
+                                                            className="px-2.5 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400
+                                                                       bg-blue-50 dark:bg-blue-500/10
+                                                                       border border-blue-500/30 rounded-lg no-underline
+                                                                       hover:bg-blue-100 dark:hover:bg-blue-500/20
+                                                                       transition-colors duration-150"
                                                         >
                                                             Edit
                                                         </Link>
@@ -363,9 +441,11 @@ export default function AdminDashboard() {
                                                                 handleDelete(bill.id, bill.billNumber)
                                                             }
                                                             disabled={deletingId === bill.id}
-                                                            className={`px-2.5 py-1.5 text-xs font-medium text-red-600 bg-red-50
-                                                                       border border-red-500 rounded-lg cursor-pointer
-                                                                       hover:bg-red-100 transition-colors duration-150
+                                                            className={`px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400
+                                                                       bg-red-50 dark:bg-red-500/10
+                                                                       border border-red-500/30 rounded-lg cursor-pointer
+                                                                       hover:bg-red-100 dark:hover:bg-red-500/20
+                                                                       transition-colors duration-150
                                                                        ${deletingId === bill.id ? "opacity-50 cursor-not-allowed" : ""}`}
                                                         >
                                                             {deletingId === bill.id ? "..." : "Delete"}

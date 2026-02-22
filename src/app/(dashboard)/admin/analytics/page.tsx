@@ -97,7 +97,7 @@ function BarChart({ data }: { data: DailyDataPoint[] }) {
 /*  Shared classes                                               */
 /* ────────────────────────────────────────────────────────────── */
 
-const CARD = "bg-surface border border-border rounded-lg shadow-sm";
+const CARD = "glass-card";
 const INPUT_CLS =
     "px-2 py-1.5 text-[0.8125rem] border border-border rounded-lg bg-surface text-fg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-150";
 const BTN_SECONDARY =
@@ -351,7 +351,7 @@ export default function AnalyticsPage() {
                                                         {med.name}
                                                     </span>
                                                 </div>
-                                                <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded">
                                                     {med.totalQuantity} units
                                                 </span>
                                             </div>

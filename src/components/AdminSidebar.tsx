@@ -16,6 +16,7 @@ import {
     Ellipsis,
     type LucideIcon,
 } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Nav items                                                     */
@@ -63,7 +64,7 @@ export default function AdminSidebar() {
             <aside
                 className={`
                     hidden md:flex flex-col fixed top-0 left-0 h-dvh z-40
-                    bg-surface border-r border-border
+                    glass-sidebar
                     transition-all duration-200 ease-in-out
                     ${collapsed ? "w-[68px]" : "w-56"}
                 `}
@@ -139,6 +140,11 @@ export default function AdminSidebar() {
                     })}
                 </nav>
 
+                {/* Theme toggle */}
+                <div className="px-3 pt-3 shrink-0">
+                    <ThemeToggle collapsed={collapsed} />
+                </div>
+
                 {/* Sign out */}
                 <div className="px-3 py-3 border-t border-border shrink-0">
                     <button
@@ -157,7 +163,7 @@ export default function AdminSidebar() {
             </aside>
 
             {/* ── Mobile Bottom Bar ───────────────────────────── */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-border safe-area-bottom">
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-sidebar border-r-0! border-t border-border safe-area-bottom">
                 <div className="flex items-center justify-around h-14">
                     {/* Left two items */}
                     {MOBILE_BAR_ITEMS.slice(0, 2).map((item) => {

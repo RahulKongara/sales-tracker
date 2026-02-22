@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ═══════════════════════════════════════════════════════════════
    DESIGN SYSTEM — Pharmacy Sales Dashboard
    Clean · High Contrast · Precise
@@ -79,26 +81,24 @@
   --space-12: 3rem;
 }
 
-/* ── Dark Mode ─────────────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-page: var(--gray-900);
-    --bg-primary: var(--gray-800);
-    --bg-secondary: var(--gray-700);
-    --bg-tertiary: var(--gray-600);
-    --text-primary: var(--gray-50);
-    --text-secondary: var(--gray-400);
-    --text-muted: var(--gray-500);
-    --text-inverted: var(--gray-900);
-    --border-default: var(--gray-700);
-    --border-strong: var(--gray-600);
-    --ring-focus: var(--blue-500);
+/* ── Dark Mode (class-based for next-themes toggle) ──────────── */
+.dark {
+  --bg-page: var(--gray-900);
+  --bg-primary: var(--gray-800);
+  --bg-secondary: var(--gray-700);
+  --bg-tertiary: var(--gray-600);
+  --text-primary: var(--gray-50);
+  --text-secondary: var(--gray-400);
+  --text-muted: var(--gray-500);
+  --text-inverted: var(--gray-900);
+  --border-default: var(--gray-700);
+  --border-strong: var(--gray-600);
+  --ring-focus: var(--blue-500);
 
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.2);
-    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.2);
-  }
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 /* ── Tailwind v4 Theme Registration ────────────────────────── */
@@ -218,13 +218,11 @@ h4 { font-size: 1.125rem; }
   background: var(--gray-400);
 }
 
-@media (prefers-color-scheme: dark) {
-  ::-webkit-scrollbar-thumb {
-    background: var(--gray-600);
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--gray-500);
-  }
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--gray-600);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
 }
 
 /* ── Selection ─────────────────────────────────────────────── */
@@ -252,4 +250,72 @@ h4 { font-size: 1.125rem; }
 
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIQUID GLASS — Glassmorphism Utilities
+   ═══════════════════════════════════════════════════════════════ */
+
+.glass-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.dark .glass-card {
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(148, 163, 184, 0.06),
+    0 4px 24px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.glass-card-primary {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.dark .glass-card-primary {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(16, 185, 129, 0.08),
+    0 4px 24px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-sidebar {
+  background: var(--bg-primary);
+  border-right: 1px solid var(--border-default);
+}
+
+.dark .glass-sidebar {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.glass-table {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.dark .glass-table {
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
 }

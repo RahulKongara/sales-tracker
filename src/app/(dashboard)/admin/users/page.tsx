@@ -154,7 +154,7 @@ export default function UsersPage() {
 
                 {/* ── Add User Form ──────────────────────────────────── */}
                 {showForm && (
-                    <div className="bg-surface border border-border rounded-lg shadow-sm p-5 mb-6">
+                    <div className="glass-card p-5 mb-6">
                         <h2 className="text-sm font-semibold text-fg mb-4">
                             New Employee
                         </h2>
@@ -237,7 +237,7 @@ export default function UsersPage() {
                 )}
 
                 {/* ── Users Table ────────────────────────────────────── */}
-                <div className="bg-surface border border-border rounded-lg shadow-sm overflow-hidden">
+                <div className="glass-table">
                     <div className="px-5 py-4 border-b border-border flex justify-between items-center">
                         <h2 className="text-sm font-semibold text-fg">
                             All Users ({users.length})
@@ -294,8 +294,8 @@ export default function UsersPage() {
                                                 <span
                                                     className={`px-2 py-0.5 rounded text-[0.6875rem] font-semibold
                                                         ${user.role === "ADMIN"
-                                                            ? "bg-blue-50 text-blue-600"
-                                                            : "bg-green-50 text-green-600"
+                                                            ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                                                            : "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400"
                                                         }`}
                                                 >
                                                     {user.role}
@@ -321,8 +321,8 @@ export default function UsersPage() {
                                                         className={`px-2 py-1 text-[0.6875rem] font-medium rounded cursor-pointer border-none
                                                                     transition-colors duration-150
                                                                     ${user.isActive
-                                                                ? "bg-red-50 text-red-600 hover:bg-red-100"
-                                                                : "bg-green-50 text-green-600 hover:bg-green-100"
+                                                                ? "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20"
+                                                                : "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-500/20"
                                                             }`}
                                                     >
                                                         {user.isActive ? "Deactivate" : "Activate"}
@@ -355,7 +355,7 @@ export default function UsersPage() {
                         onClick={() => setResetTarget(null)}
                     >
                         <div
-                            className="bg-surface border border-border rounded-lg shadow-sm p-6 w-full max-w-[400px]"
+                            className="glass-card p-6 w-full max-w-100"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <h3 className="text-[0.9375rem] font-semibold text-fg mb-3">
