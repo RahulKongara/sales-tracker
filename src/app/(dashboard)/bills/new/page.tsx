@@ -9,6 +9,7 @@ import {
     PAYMENT_MODE_CONFIG,
     PRESCRIPTION_CHARGE,
 } from "@/lib/constants";
+import { ArrowLeft, Pill, ChevronDown } from "lucide-react";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Types                                                        */
@@ -205,15 +206,12 @@ export default function NewBillPage() {
                                    rounded-lg transition-colors duration-150 cursor-pointer -ml-1"
                         aria-label="Go back"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M19 12H5" />
-                            <path d="m12 19-7-7 7-7" />
-                        </svg>
+                        <ArrowLeft className="w-[18px] h-[18px]" />
                         <span className="hidden sm:inline text-sm font-medium">Back</span>
                     </button>
 
                     <div className="w-px h-5 bg-border hidden sm:block" />
-                    <span className="text-lg sm:text-xl">💊</span>
+                    <Pill className="w-5 h-5 sm:w-[22px] sm:h-[22px] text-green-600" />
                     <h1 className="text-sm sm:text-base font-semibold text-fg tracking-tight">New Bill</h1>
                 </div>
 
@@ -529,21 +527,10 @@ export default function NewBillPage() {
                             <h2 className="text-sm font-semibold text-fg">
                                 Today&apos;s Bills ({todayBills.length})
                             </h2>
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className={`md:hidden text-fg-muted transition-transform duration-200
+                            <ChevronDown
+                                className={`w-4 h-4 md:hidden text-fg-muted transition-transform duration-200
                                            ${showTodayBills ? "rotate-180" : ""}`}
-                            >
-                                <path d="m6 9 6 6 6-6" />
-                            </svg>
+                            />
                         </button>
 
                         {/* Bills list — always visible on md+, toggled on mobile */}

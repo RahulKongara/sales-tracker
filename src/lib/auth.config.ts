@@ -46,7 +46,8 @@ export const authConfig: NextAuthConfig = {
             const isPublicPath =
                 path === "/login" ||
                 path.startsWith("/api/auth") ||
-                path.startsWith("/api/reports");
+                path.startsWith("/api/reports") ||
+                path.startsWith("/api/cron");
 
             if (isPublicPath) {
                 if (isLoggedIn && path === "/login") {

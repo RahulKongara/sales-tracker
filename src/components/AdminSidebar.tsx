@@ -4,21 +4,49 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
+import {
+    LayoutDashboard,
+    TrendingUp,
+    Activity,
+    Users,
+    Settings,
+    Plus,
+    LogOut,
+    ChevronsLeft,
+    Ellipsis,
+    type LucideIcon,
+} from "lucide-react";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Nav items                                                     */
 /* ────────────────────────────────────────────────────────────── */
 
-const NAV_ITEMS = [
-    { href: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-    { href: "/admin/analytics", label: "Analytics", icon: "📈" },
-    { href: "/admin/activity", label: "Activity", icon: "📋" },
-    { href: "/admin/users", label: "Users", icon: "👥" },
-    { href: "/admin/config", label: "Config", icon: "⚙️" },
+interface NavItem {
+    href: string;
+    label: string;
+    icon: LucideIcon;
+}
+
+const NAV_ITEMS: NavItem[] = [
+    { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/analytics", label: "Analytics", icon: TrendingUp },
+    { href: "/admin/activity", label: "Activity", icon: Activity },
+    { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/config", label: "Config", icon: Settings },
 ];
 
-const QUICK_ACTIONS = [
-    { href: "/bills/new", label: "New Bill", icon: "➕" },
+/* Items shown directly in the mobile bottom bar (excluding center button) */
+const MOBILE_BAR_ITEMS: NavItem[] = [
+    NAV_ITEMS[0], // Dashboard
+    NAV_ITEMS[1], // Analytics
+    // ── center "New Bill" button goes here ──
+    NAV_ITEMS[3], // Users
+];
+
+/* Items that go into the "More" dropdown on mobile */
+const MOBILE_MORE_ITEMS: NavItem[] = [
+    NAV_ITEMS[2], // Activity
+    NAV_ITEMS[4], // Config
 ];
 
 /* ────────────────────────────────────────────────────────────── */
@@ -44,7 +72,7 @@ export default function AdminSidebar() {
                 <div className="flex items-center justify-between px-4 h-14 border-b border-border shrink-0">
                     {!collapsed && (
                         <span className="text-sm font-bold tracking-tight text-fg truncate">
-                            💊 Sales Tracker
+                            Sales Tracker
                         </span>
                     )}
                     <button
@@ -52,33 +80,27 @@ export default function AdminSidebar() {
                         className="p-1.5 rounded-md hover:bg-surface-secondary text-fg-muted hover:text-fg transition-colors"
                         title={collapsed ? "Expand" : "Collapse"}
                     >
-                        <svg
+                        <ChevronsLeft
                             className={`w-4 h-4 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`}
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                        </svg>
+                        />
                     </button>
                 </div>
 
                 {/* Quick actions */}
                 <div className="px-3 pt-3 pb-1 shrink-0">
-                    {QUICK_ACTIONS.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`
-                                flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium
-                                bg-green-600/10 text-green-700 dark:text-green-400
-                                hover:bg-green-600/20 transition-colors
-                                ${collapsed ? "justify-center" : ""}
-                            `}
-                            title={collapsed ? item.label : undefined}
-                        >
-                            <span className="text-base">{item.icon}</span>
-                            {!collapsed && <span>{item.label}</span>}
-                        </Link>
-                    ))}
+                    <Link
+                        href="/bills/new"
+                        className={`
+                            flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium
+                            bg-green-600/10 text-green-700 dark:text-green-400
+                            hover:bg-green-600/20 transition-colors
+                            ${collapsed ? "justify-center" : ""}
+                        `}
+                        title={collapsed ? "New Bill" : undefined}
+                    >
+                        <Plus className="w-4 h-4 shrink-0" />
+                        {!collapsed && <span>New Bill</span>}
+                    </Link>
                 </div>
 
                 {/* Divider label */}
@@ -94,6 +116,7 @@ export default function AdminSidebar() {
                 <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
                     {NAV_ITEMS.map((item) => {
                         const isActive = pathname === item.href;
+                        const Icon = item.icon;
                         return (
                             <Link
                                 key={item.href}
@@ -109,7 +132,7 @@ export default function AdminSidebar() {
                                 `}
                                 title={collapsed ? item.label : undefined}
                             >
-                                <span className="text-base shrink-0">{item.icon}</span>
+                                <Icon className="w-4 h-4 shrink-0" />
                                 {!collapsed && <span>{item.label}</span>}
                             </Link>
                         );
@@ -127,9 +150,7 @@ export default function AdminSidebar() {
                         `}
                         title={collapsed ? "Sign Out" : undefined}
                     >
-                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
+                        <LogOut className="w-4 h-4 shrink-0" />
                         {!collapsed && <span>Sign Out</span>}
                     </button>
                 </div>
@@ -138,8 +159,10 @@ export default function AdminSidebar() {
             {/* ── Mobile Bottom Bar ───────────────────────────── */}
             <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-border safe-area-bottom">
                 <div className="flex items-center justify-around h-14">
-                    {NAV_ITEMS.slice(0, 4).map((item) => {
+                    {/* Left two items */}
+                    {MOBILE_BAR_ITEMS.slice(0, 2).map((item) => {
                         const isActive = pathname === item.href;
+                        const Icon = item.icon;
                         return (
                             <Link
                                 key={item.href}
@@ -153,13 +176,52 @@ export default function AdminSidebar() {
                                     }
                                 `}
                             >
-                                <span className="text-lg">{item.icon}</span>
+                                <Icon className="w-5 h-5" />
                                 <span className="text-[0.5625rem] font-medium leading-none">
                                     {item.label}
                                 </span>
                             </Link>
                         );
                     })}
+
+                    {/* Center: New Bill (raised, bigger) */}
+                    <Link
+                        href="/bills/new"
+                        className="flex flex-col items-center gap-0.5 -mt-5"
+                    >
+                        <span className="flex items-center justify-center w-12 h-12 rounded-full bg-green-600 text-white shadow-lg shadow-green-600/30 active:scale-95 transition-transform">
+                            <Plus className="w-6 h-6" strokeWidth={2.5} />
+                        </span>
+                        <span className="text-[0.5625rem] font-medium leading-none text-fg-muted">
+                            New Bill
+                        </span>
+                    </Link>
+
+                    {/* Right two items */}
+                    {MOBILE_BAR_ITEMS.slice(2).map((item) => {
+                        const isActive = pathname === item.href;
+                        const Icon = item.icon;
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={`
+                                    flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg
+                                    transition-colors duration-150 min-w-[52px]
+                                    ${isActive
+                                        ? "text-fg"
+                                        : "text-fg-muted hover:text-fg-secondary"
+                                    }
+                                `}
+                            >
+                                <Icon className="w-5 h-5" />
+                                <span className="text-[0.5625rem] font-medium leading-none">
+                                    {item.label}
+                                </span>
+                            </Link>
+                        );
+                    })}
+
                     {/* More menu with remaining items */}
                     <MobileMoreMenu />
                 </div>
@@ -176,13 +238,7 @@ function MobileMoreMenu() {
     const pathname = usePathname();
     const [open, setOpen] = useState(false);
 
-    const extra = [
-        ...NAV_ITEMS.slice(4),
-        ...QUICK_ACTIONS,
-        { href: "#signout", label: "Sign Out", icon: "🚪" },
-    ];
-
-    const isExtraActive = NAV_ITEMS.slice(4).some((i) => pathname === i.href);
+    const isExtraActive = MOBILE_MORE_ITEMS.some((i) => pathname === i.href);
 
     return (
         <div className="relative">
@@ -194,7 +250,7 @@ function MobileMoreMenu() {
                     ${isExtraActive ? "text-fg" : "text-fg-muted hover:text-fg-secondary"}
                 `}
             >
-                <span className="text-lg">•••</span>
+                <Ellipsis className="w-5 h-5" />
                 <span className="text-[0.5625rem] font-medium leading-none">More</span>
             </button>
 
@@ -207,20 +263,9 @@ function MobileMoreMenu() {
                     />
                     {/* Dropdown */}
                     <div className="absolute bottom-full right-0 mb-2 z-50 w-44 bg-surface border border-border rounded-xl shadow-lg overflow-hidden">
-                        {extra.map((item) => {
-                            if (item.href === "#signout") {
-                                return (
-                                    <button
-                                        key="signout"
-                                        onClick={() => signOut({ callbackUrl: "/login" })}
-                                        className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-                                    >
-                                        <span>{item.icon}</span>
-                                        <span>{item.label}</span>
-                                    </button>
-                                );
-                            }
+                        {MOBILE_MORE_ITEMS.map((item) => {
                             const isActive = pathname === item.href;
+                            const Icon = item.icon;
                             return (
                                 <Link
                                     key={item.href}
@@ -234,11 +279,21 @@ function MobileMoreMenu() {
                                         }
                                     `}
                                 >
-                                    <span>{item.icon}</span>
+                                    <Icon className="w-4 h-4 shrink-0" />
                                     <span>{item.label}</span>
                                 </Link>
                             );
                         })}
+
+                        {/* Sign out */}
+                        <button
+                            key="signout"
+                            onClick={() => signOut({ callbackUrl: "/login" })}
+                            className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                        >
+                            <LogOut className="w-4 h-4 shrink-0" />
+                            <span>Sign Out</span>
+                        </button>
                     </div>
                 </>
             )}
