@@ -176,7 +176,7 @@ export default function EditBillPage() {
 
             const data = await res.json();
             setSuccessMsg(
-                `Bill ${data.bill.billNumber} updated — ${formatCurrency(data.bill.grandTotal)}`
+                `Bill ${data.billNumber} updated successfully!`
             );
 
             // Redirect back after a short delay
