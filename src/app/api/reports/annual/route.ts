@@ -3,6 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { PHARMACY_NAME } from "@/lib/constants";
 import { sendEmailWithRetry } from "@/lib/email-retry";
 import { getEmailConfig } from "@/lib/email-config";
+import {
+    fmt,
+    wrapEmailTemplate,
+    buildMetricRow,
+    buildSectionHeader,
+    buildTable,
+    buildRankedList,
+} from "@/lib/email-templates";
 
 /**
  * GET /api/reports/annual?year=2025
@@ -22,7 +30,6 @@ async function buildAnnualReport(year: number) {
     const where = { createdAt: { gte: start, lte: end }, isDeleted: false };
 
     const [aggregate, byMonth, byPayment, byEmployee] = await Promise.all([
-        // Overall totals
         prisma.bill.aggregate({
             where,
             _sum: {
@@ -33,7 +40,6 @@ async function buildAnnualReport(year: number) {
             _count: true,
         }),
 
-        // Monthly breakdown (groupBy)
         prisma.$queryRaw<
             { month: number; count: bigint; total: number }[]
         >`
@@ -49,7 +55,6 @@ async function buildAnnualReport(year: number) {
       ORDER BY month
     `,
 
-        // By payment mode
         prisma.bill.groupBy({
             by: ["paymentMode"],
             where,
@@ -57,7 +62,6 @@ async function buildAnnualReport(year: number) {
             _sum: { grandTotal: true },
         }),
 
-        // By employee
         prisma.bill.groupBy({
             by: ["createdBy"],
             where,
@@ -66,7 +70,6 @@ async function buildAnnualReport(year: number) {
         }),
     ]);
 
-    // Fetch employee names
     const empIds = byEmployee.map((e) => e.createdBy);
     const users = await prisma.user.findMany({
         where: { id: { in: empIds } },
@@ -74,7 +77,6 @@ async function buildAnnualReport(year: number) {
     });
     const userMap = new Map(users.map((u) => [u.id, u]));
 
-    // Top medicines
     const topMeds = await prisma.$queryRaw<
         { name: string; quantity: bigint }[]
     >`
@@ -136,7 +138,6 @@ async function buildAnnualReport(year: number) {
 // ── GET: Query annual report (admin) ────────────────────────────
 
 export async function GET(req: NextRequest) {
-    // Import auth dynamically for the admin check
     const { auth } = await import("@/lib/auth");
     const session = await auth();
 
@@ -174,13 +175,9 @@ export async function POST(req: Request) {
     }
 
     try {
-        const year = new Date().getFullYear() - 1; // Report for previous year
+        const year = new Date().getFullYear() - 1;
         const report = await buildAnnualReport(year);
 
-        const formatCurrency = (n: number) =>
-            `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
-
-        // Email delivery (DB config → env var fallback)
         const emailConfig = await getEmailConfig();
         const resendKey = emailConfig.resendApiKey;
         const adminEmail = emailConfig.adminEmail;
@@ -191,42 +188,55 @@ export async function POST(req: Request) {
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
             ];
 
-            const htmlBody = `
-        <div style="font-family: -apple-system, sans-serif; max-width: 640px; margin: 0 auto;">
-          <h2 style="color: #111827;">📊 Annual Sales Summary — ${year}</h2>
-          <div style="background: #f9fafb; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
-            <p style="margin:0;"><strong>Total Revenue:</strong> ${formatCurrency(report.summary.totalRevenue)}</p>
-            <p style="margin:0;"><strong>Total Bills:</strong> ${report.summary.billCount}</p>
-            <p style="margin:0;"><strong>Avg Bill Value:</strong> ${formatCurrency(report.summary.avgBillValue)}</p>
-            <p style="margin:0;"><strong>Medicines:</strong> ${formatCurrency(report.summary.totalMedicinesRevenue)}</p>
-            <p style="margin:0;"><strong>Prescriptions:</strong> ${formatCurrency(report.summary.totalPrescriptionRevenue)}</p>
-          </div>
-          <h3>Monthly Breakdown</h3>
-          <table style="width:100%; border-collapse:collapse; font-size:14px;">
-            <tr style="background:#f3f4f6;"><th style="padding:6px 8px; text-align:left;">Month</th><th>Bills</th><th style="text-align:right;">Revenue</th></tr>
-            ${report.monthlyBreakdown
-                    .map(
-                        (m) =>
-                            `<tr><td style="padding:4px 8px;">${monthNames[m.month]}</td><td>${m.billCount}</td><td style="text-align:right;">${formatCurrency(m.revenue)}</td></tr>`
-                    )
-                    .join("")}
-          </table>
-          <h3>Top 10 Medicines</h3>
-          <ol style="font-size:14px;">
-            ${report.topMedicines.map((m) => `<li>${m.name} — ${m.quantity} units</li>`).join("")}
-          </ol>
-          <p style="color:#6b7280; font-size:12px; margin-top:2rem;">
-            ${PHARMACY_NAME} — Automated Annual Report
-          </p>
-        </div>
-      `;
+            const bodyHtml = [
+                buildMetricRow([
+                    { label: "Total Revenue", value: fmt(report.summary.totalRevenue) },
+                    { label: "Total Bills", value: String(report.summary.billCount) },
+                    { label: "Avg Bill", value: fmt(report.summary.avgBillValue) },
+                ]),
+                buildSectionHeader("Monthly Breakdown"),
+                buildTable(
+                    ["Month", "Bills", "Revenue"],
+                    report.monthlyBreakdown.map((m) => [
+                        monthNames[m.month],
+                        String(m.billCount),
+                        fmt(m.revenue),
+                    ]),
+                    [2]
+                ),
+                buildSectionHeader("Payment Modes"),
+                buildTable(
+                    ["Mode", "Bills", "Amount"],
+                    report.byPaymentMode.map((p) => [
+                        p.mode,
+                        String(p.count),
+                        fmt(p.total),
+                    ]),
+                    [2]
+                ),
+                buildSectionHeader("Employee Performance"),
+                buildTable(
+                    ["Name", "Bills", "Revenue"],
+                    report.byEmployee
+                        .sort((a, b) => b.total - a.total)
+                        .map((e) => [e.name, String(e.count), fmt(e.total)]),
+                    [2]
+                ),
+                buildSectionHeader("Top Medicines"),
+                buildRankedList(
+                    report.topMedicines.map((m) => ({
+                        name: m.name,
+                        value: `${m.quantity} units`,
+                    }))
+                ),
+            ].join("");
 
-            const fromEmail = emailConfig.fromEmail;
+            const htmlBody = wrapEmailTemplate("Annual", String(year), bodyHtml);
 
             const result = await sendEmailWithRetry(resendKey, {
-                from: `${PHARMACY_NAME} <${fromEmail}>`,
+                from: `${PHARMACY_NAME} <${emailConfig.fromEmail}>`,
                 to: adminEmail,
-                subject: `📊 Annual Report ${year}: ${formatCurrency(report.summary.totalRevenue)}`,
+                subject: `Annual Report ${year}: ${fmt(report.summary.totalRevenue)}`,
                 html: htmlBody,
             });
 

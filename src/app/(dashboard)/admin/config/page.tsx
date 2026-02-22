@@ -15,6 +15,7 @@ export default function EmailConfigPage() {
     const [fromEmail, setFromEmail] = useState("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [sendingTest, setSendingTest] = useState(false);
     const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(
         null
     );
@@ -72,6 +73,26 @@ export default function EmailConfigPage() {
             setMessage({ type: "err", text: "Failed to save configuration" });
         } finally {
             setSaving(false);
+        }
+    }
+
+    async function handleTestEmail() {
+        setSendingTest(true);
+        setMessage(null);
+        try {
+            const res = await fetch("/api/admin/config/test-email", {
+                method: "POST",
+            });
+            const data = await res.json();
+            if (res.ok && data.sent) {
+                setMessage({ type: "ok", text: "Test email sent! Check your inbox." });
+            } else {
+                setMessage({ type: "err", text: data.error || "Failed to send test email" });
+            }
+        } catch {
+            setMessage({ type: "err", text: "Failed to send test email" });
+        } finally {
+            setSendingTest(false);
         }
     }
 
@@ -179,15 +200,27 @@ export default function EmailConfigPage() {
                                 </div>
                             )}
 
-                            <button
-                                type="submit"
-                                disabled={saving}
-                                className="w-full px-5 py-2.5 text-sm font-semibold text-fg-inverted bg-fg border-none rounded-lg
-                                           cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed
-                                           hover:opacity-90 active:scale-[0.98] transition-all duration-150"
-                            >
-                                {saving ? "Saving..." : "Save Configuration"}
-                            </button>
+                            <div className="flex gap-3">
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="flex-1 px-5 py-2.5 text-sm font-semibold text-fg-inverted bg-fg border-none rounded-lg
+                                               cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed
+                                               hover:opacity-90 active:scale-[0.98] transition-all duration-150"
+                                >
+                                    {saving ? "Saving..." : "Save Configuration"}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleTestEmail}
+                                    disabled={sendingTest || !adminEmail}
+                                    className="px-4 py-2.5 text-sm font-medium text-fg-secondary bg-surface-secondary border border-border
+                                               rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
+                                               hover:bg-surface-tertiary hover:text-fg active:scale-[0.98] transition-all duration-150"
+                                >
+                                    {sendingTest ? "Sending..." : "Send Test Email"}
+                                </button>
+                            </div>
                         </div>
 
                         {/* Info Card */}
