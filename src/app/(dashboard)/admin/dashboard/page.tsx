@@ -37,99 +37,68 @@ interface DashboardStats {
 }
 
 /* ────────────────────────────────────────────────────────────── */
-/*  Payment Stream Area Chart                                    */
+/*  Payment Stream Pie Chart                                     */
 /* ────────────────────────────────────────────────────────────── */
 
-const CHART_COLORS = ["#10B981", "#0EA5E9"];
+interface PieSlice {
+    label: string;
+    value: number;
+    color: string;
+}
 
-function PaymentStreamChart({ bills }: { bills: DashboardBill[] }) {
-    if (!bills.length) return null;
+function PaymentPieChart({ slices }: { slices: PieSlice[] }) {
+    const total = slices.reduce((s, d) => s + d.value, 0);
+    if (total === 0) return null;
 
-    const sorted = [...bills].sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
+    const size = 180;
+    const cx = size / 2;
+    const cy = size / 2;
+    const outerR = 80;
+    const innerR = 50; // donut hole
 
-    // Build two cumulative series: Cash+Card vs Paytm
-    let cashCardRunning = 0;
-    let paytmRunning = 0;
-    const cashCardValues: number[] = [];
-    const paytmValues: number[] = [];
+    let cumAngle = -Math.PI / 2; // start at 12 o'clock
 
-    for (const bill of sorted) {
-        if (bill.paymentMode === "PAYTM") {
-            paytmRunning += bill.grandTotal;
-        } else {
-            cashCardRunning += bill.grandTotal;
-        }
-        cashCardValues.push(cashCardRunning);
-        paytmValues.push(paytmRunning);
+    function arcPath(startAngle: number, endAngle: number, r: number, ir: number) {
+        const x1 = cx + r * Math.cos(startAngle);
+        const y1 = cy + r * Math.sin(startAngle);
+        const x2 = cx + r * Math.cos(endAngle);
+        const y2 = cy + r * Math.sin(endAngle);
+        const ix1 = cx + ir * Math.cos(endAngle);
+        const iy1 = cy + ir * Math.sin(endAngle);
+        const ix2 = cx + ir * Math.cos(startAngle);
+        const iy2 = cy + ir * Math.sin(startAngle);
+        const largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
+
+        return [
+            `M ${x1.toFixed(2)} ${y1.toFixed(2)}`,
+            `A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`,
+            `L ${ix1.toFixed(2)} ${iy1.toFixed(2)}`,
+            `A ${ir} ${ir} 0 ${largeArc} 0 ${ix2.toFixed(2)} ${iy2.toFixed(2)}`,
+            "Z",
+        ].join(" ");
     }
 
-    const series = [cashCardValues, paytmValues];
-    const numPoints = cashCardValues.length;
-    const maxVal = Math.max(...cashCardValues, ...paytmValues, 1);
-
-    const width = 600;
-    const height = 180;
-    const pad = { top: 10, right: 10, bottom: 10, left: 10 };
-    const chartW = width - pad.left - pad.right;
-    const chartH = height - pad.top - pad.bottom;
-
-    function toPath(values: number[]): string {
-        return values
-            .map((v, i) => {
-                const x = pad.left + (numPoints === 1 ? chartW / 2 : (i / (numPoints - 1)) * chartW);
-                const y = pad.top + chartH - (v / maxVal) * chartH;
-                return `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
-            })
-            .join(" ");
-    }
-
-    function toAreaPath(values: number[]): string {
-        const line = toPath(values);
-        const lastX = numPoints === 1 ? pad.left + chartW / 2 : pad.left + chartW;
-        const firstX = numPoints === 1 ? pad.left + chartW / 2 : pad.left;
-        const baseY = pad.top + chartH;
-        return `${line} L ${lastX.toFixed(1)} ${baseY} L ${firstX.toFixed(1)} ${baseY} Z`;
-    }
+    const paths = slices
+        .filter((s) => s.value > 0)
+        .map((slice) => {
+            const angle = (slice.value / total) * Math.PI * 2;
+            const startAngle = cumAngle;
+            const endAngle = cumAngle + angle;
+            cumAngle = endAngle;
+            return { ...slice, d: arcPath(startAngle, endAngle, outerR, innerR) };
+        });
 
     return (
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
-            <defs>
-                {CHART_COLORS.map((color, i) => (
-                    <linearGradient key={i} id={`stream-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={color} stopOpacity={0.4} />
-                        <stop offset="100%" stopColor={color} stopOpacity={0.05} />
-                    </linearGradient>
-                ))}
-            </defs>
-
-            {/* Grid lines */}
-            {[0, 0.5, 1].map((frac) => {
-                const y = pad.top + chartH * (1 - frac);
-                return (
-                    <line
-                        key={frac}
-                        x1={pad.left} y1={y}
-                        x2={pad.left + chartW} y2={y}
-                        stroke="var(--border-default)" strokeWidth={0.5}
-                        strokeDasharray={frac === 0 ? undefined : "4 4"}
-                    />
-                );
-            })}
-
-            {/* Area fills */}
-            {series.map((values, i) => (
-                <path key={`area-${i}`} d={toAreaPath(values)} fill={`url(#stream-grad-${i})`} />
-            ))}
-
-            {/* Lines */}
-            {series.map((values, i) => (
+        <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-auto max-w-45 mx-auto">
+            {paths.map((p) => (
                 <path
-                    key={`line-${i}`} d={toPath(values)}
-                    fill="none" stroke={CHART_COLORS[i]} strokeWidth={2}
-                    strokeLinecap="round" strokeLinejoin="round"
-                />
+                    key={p.label}
+                    d={p.d}
+                    fill={p.color}
+                    className="transition-opacity duration-150 hover:opacity-80"
+                >
+                    <title>{p.label}: {((p.value / total) * 100).toFixed(1)}%</title>
+                </path>
             ))}
         </svg>
     );
@@ -313,25 +282,47 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* ── Payment Stream Area Chart ──────────────────────── */}
-                {(stats?.bills?.length || 0) > 0 && (
+                {/* ── Payment Stream Pie Chart ────────────────────────── */}
+                {(stats?.totalRevenue || 0) > 0 && (
                     <div className="glass-card px-5 py-4 mb-6">
-                        <div className="flex items-center justify-between mb-3">
-                            <p className="text-xs font-semibold text-fg-secondary uppercase tracking-wider">
-                                Payment Stream
-                            </p>
-                            <div className="flex gap-3">
-                                <span className="flex items-center gap-1.5 text-xs text-fg-secondary">
-                                    <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: CHART_COLORS[0] }} />
-                                    #10B981
-                                </span>
-                                <span className="flex items-center gap-1.5 text-xs text-fg-secondary">
-                                    <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: CHART_COLORS[1] }} />
-                                    #0EA5E9
-                                </span>
+                        <p className="text-xs font-semibold text-fg-secondary mb-3 uppercase tracking-wider">
+                            Payment Stream
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                            <PaymentPieChart
+                                slices={paymentModes.map((mode) => ({
+                                    label: PAYMENT_MODE_CONFIG[mode].label,
+                                    value: stats?.byPaymentMode[mode] || 0,
+                                    color: PAYMENT_MODE_CONFIG[mode].color,
+                                }))}
+                            />
+                            <div className="flex flex-col gap-2">
+                                {paymentModes.map((mode) => {
+                                    const config = PAYMENT_MODE_CONFIG[mode];
+                                    const amount = stats?.byPaymentMode[mode] || 0;
+                                    const pct = stats?.totalRevenue
+                                        ? ((amount / stats.totalRevenue) * 100).toFixed(1)
+                                        : "0";
+                                    return (
+                                        <div key={mode} className="flex items-center gap-2">
+                                            <span
+                                                className="inline-block w-2.5 h-2.5 rounded-sm shrink-0"
+                                                style={{ background: config.color }}
+                                            />
+                                            <span className="text-xs text-fg-secondary">
+                                                {config.label}
+                                            </span>
+                                            <span className="text-xs font-semibold text-fg tabular-nums ml-auto">
+                                                {formatCurrency(amount)}
+                                            </span>
+                                            <span className="text-xs text-fg-muted tabular-nums w-10 text-right">
+                                                {pct}%
+                                            </span>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
-                        <PaymentStreamChart bills={stats!.bills} />
                     </div>
                 )}
 
