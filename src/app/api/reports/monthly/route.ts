@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifySignatureAppRouter } from "@upstash/qstash/nextjs";
 import { prisma } from "@/lib/prisma";
 import { PHARMACY_NAME } from "@/lib/constants";
 import { sendEmailWithRetry } from "@/lib/email-retry";
@@ -16,17 +17,12 @@ import {
 /**
  * POST /api/reports/monthly — Monthly sales report email.
  *
- * Triggered by a cron job on the last day of each month at 11 PM IST.
- * Requires CRON_SECRET env var for authentication.
+ * Triggered by QStash schedule on the last day of each month at 11:00 PM IST.
+ * Authenticated via QStash signature verification (Upstash-Signature header).
+ *
+ * QStash cron: CRON_TZ=Asia/Kolkata 0 23 L * *
  */
-export async function POST(req: Request) {
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+async function handler(req: Request) {
     try {
         const now = new Date();
         const IST_OFFSET_MS = 330 * 60 * 1000;
@@ -210,3 +206,5 @@ export async function POST(req: Request) {
         );
     }
 }
+
+export const POST = verifySignatureAppRouter(handler);

@@ -48,3 +48,4 @@ context/
 docs/
 prisma/seed.ts
 .claude/
+.planning/

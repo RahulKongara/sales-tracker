@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifySignatureAppRouter } from "@upstash/qstash/nextjs";
 import { prisma } from "@/lib/prisma";
 import { PHARMACY_NAME } from "@/lib/constants";
 import { sendEmailWithRetry } from "@/lib/email-retry";
@@ -18,7 +19,9 @@ import {
  *
  * Annual summary report — aggregates full-year stats.
  * GET: returns JSON report for any year (admin auth via session).
- * POST: triggers email delivery (cron auth via CRON_SECRET).
+ * POST: triggers email delivery, authenticated via QStash signature.
+ *
+ * QStash cron: CRON_TZ=Asia/Kolkata 0 23 1 1 *
  */
 
 // ── Shared aggregation ──────────────────────────────────────────
@@ -164,16 +167,9 @@ export async function GET(req: NextRequest) {
     }
 }
 
-// ── POST: Cron trigger with email ───────────────────────────────
+// ── POST: Cron trigger with email (QStash verified) ─────────────
 
-export async function POST(req: Request) {
-    const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+async function postHandler(req: Request) {
     try {
         const year = new Date().getFullYear() - 1;
         const report = await buildAnnualReport(year);
@@ -263,3 +259,5 @@ export async function POST(req: Request) {
         );
     }
 }
+
+export const POST = verifySignatureAppRouter(postHandler);
