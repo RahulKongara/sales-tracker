@@ -49,3 +49,4 @@ docs/
 prisma/seed.ts
 .claude/
 .planning/
+CLAUDE.md

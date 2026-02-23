@@ -38,39 +38,58 @@ export async function POST(req: NextRequest) {
         const grandTotal = medicinesSubtotal + prescriptionCharge;
 
         // Generate bill number: YYYYMMDD-NNNN
-        const { start, end } = getISTDayBounds();
-        const todayBillCount = await prisma.bill.count({
-            where: {
-                createdAt: { gte: start, lte: end },
-                isDeleted: false,
-            },
-        });
-
+        // Retries on unique conflict (race condition between concurrent requests)
         const now = new Date();
         const istDateStr = toISTDateString(now);
         const [yyyy, mm, dd] = istDateStr.split("-");
-        const seq = String(todayBillCount + 1).padStart(4, "0");
-        const billNumber = `${yyyy}${mm}${dd}-${seq}`;
 
-        // Create bill + line items in a transaction
-        const bill = await prisma.bill.create({
-            data: {
-                billNumber,
-                createdBy: session.user.id,
-                customerName: parsed.customerName || null,
-                paymentMode: parsed.paymentMode,
-                hasPrescription: parsed.hasPrescription,
-                prescriptionCharge,
-                medicinesSubtotal,
-                grandTotal,
-                lineItems: {
-                    create: lineItems,
+        let bill;
+        let attempts = 0;
+        while (true) {
+            const { start, end } = getISTDayBounds();
+            const todayBillCount = await prisma.bill.count({
+                where: {
+                    createdAt: { gte: start, lte: end },
+                    isDeleted: false,
                 },
-            },
-            include: {
-                lineItems: true,
-            },
-        });
+            });
+
+            const seq = String(todayBillCount + 1 + attempts).padStart(4, "0");
+            const billNumber = `${yyyy}${mm}${dd}-${seq}`;
+
+            try {
+                bill = await prisma.bill.create({
+                    data: {
+                        billNumber,
+                        createdBy: session.user.id,
+                        customerName: parsed.customerName || null,
+                        paymentMode: parsed.paymentMode,
+                        hasPrescription: parsed.hasPrescription,
+                        prescriptionCharge,
+                        medicinesSubtotal,
+                        grandTotal,
+                        lineItems: {
+                            create: lineItems,
+                        },
+                    },
+                    include: {
+                        lineItems: true,
+                    },
+                });
+                break;
+            } catch (err: unknown) {
+                if (
+                    err instanceof Error &&
+                    "code" in err &&
+                    (err as { code: string }).code === "P2002" &&
+                    attempts < 5
+                ) {
+                    attempts++;
+                    continue;
+                }
+                throw err;
+            }
+        }
 
         return NextResponse.json(
             {
