@@ -49,7 +49,7 @@ async function captureCanvas(element: HTMLElement) {
 /*  Component                                                    */
 /* ────────────────────────────────────────────────────────────── */
 
-export default function BillExport({ bill, pharmacyName = "Pharmacy Sales Tracker" }: BillExportProps) {
+export default function BillExport({ bill, pharmacyName = "Aushadhi Ayurvedic Pharmacy" }: BillExportProps) {
     const printRef = useRef<HTMLDivElement>(null);
     const [busy, setBusy] = useState<string | null>(null);
 
