@@ -197,7 +197,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-fg tracking-tight">
-                            Liquid Glass
+                            Dashboard
                         </h1>
                     </div>
                     <div className="flex items-center gap-3">
