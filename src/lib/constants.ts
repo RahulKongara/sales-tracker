@@ -24,7 +24,7 @@ export const PAYMENT_MODE_CONFIG: Record<
 export const SESSION_MAX_AGE = 49500;
 
 /** Pharmacy name — used in bill exports and emails */
-export const PHARMACY_NAME = "Pharmacy Sales Dashboard";
+export const PHARMACY_NAME = "Aushadhi Pharmacy Sales Division";
 
 /** Timezone */
 export const TIMEZONE = "Asia/Kolkata";
