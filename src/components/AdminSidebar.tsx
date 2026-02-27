@@ -14,6 +14,8 @@ import {
     LogOut,
     ChevronsLeft,
     Ellipsis,
+    Package,
+    Warehouse,
     type LucideIcon,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -31,6 +33,8 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
     { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/analytics", label: "Analytics", icon: TrendingUp },
+    { href: "/admin/medicines", label: "Medicines", icon: Package },
+    { href: "/admin/inventory", label: "Inventory", icon: Warehouse },
     { href: "/admin/activity", label: "Activity", icon: Activity },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/config", label: "Config", icon: Settings },
@@ -41,13 +45,15 @@ const MOBILE_BAR_ITEMS: NavItem[] = [
     NAV_ITEMS[0], // Dashboard
     NAV_ITEMS[1], // Analytics
     // ── center "New Bill" button goes here ──
-    NAV_ITEMS[2], // Users
+    NAV_ITEMS[2], // Medicines
 ];
 
 /* Items that go into the "More" dropdown on mobile */
 const MOBILE_MORE_ITEMS: NavItem[] = [
-    NAV_ITEMS[3], // Activity
-    NAV_ITEMS[4], // Config
+    NAV_ITEMS[3], // Inventory
+    NAV_ITEMS[4], // Activity
+    NAV_ITEMS[5], // Users
+    NAV_ITEMS[6], // Config
 ];
 
 /* ────────────────────────────────────────────────────────────── */

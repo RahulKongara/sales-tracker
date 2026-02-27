@@ -37,8 +37,9 @@ model User {
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at")
 
-  bills     Bill[]
-  auditLogs AuditLog[]
+  bills        Bill[]
+  auditLogs    AuditLog[]
+  stockBatches StockBatch[]
 
   @@map("users")
 }
@@ -78,8 +79,11 @@ model BillLineItem {
   costPerPiece Decimal @map("cost_per_piece") @db.Decimal(10, 2)
   subtotal     Decimal @db.Decimal(10, 2)
   sortOrder    Int     @map("sort_order")
+  medicineId   String? @map("medicine_id")
 
-  bill Bill @relation(fields: [billId], references: [id], onDelete: Cascade)
+  bill            Bill             @relation(fields: [billId], references: [id], onDelete: Cascade)
+  medicine        Medicine?        @relation(fields: [medicineId], references: [id])
+  stockDeductions StockDeduction[]
 
   @@index([billId])
   @@index([medicineName])
@@ -101,6 +105,63 @@ model AuditLog {
   bill Bill @relation(fields: [targetBillId], references: [id])
 
   @@map("audit_logs")
+}
+
+// ── Medicine ──────────────────────────────────────────────────
+
+model Medicine {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  category      String?
+  defaultPrice  Decimal  @map("default_price") @db.Decimal(10, 2)
+  reorderLevel  Int      @default(10) @map("reorder_level")
+  currentStock  Int      @default(0) @map("current_stock")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  stockBatches  StockBatch[]
+  billLineItems BillLineItem[]
+
+  @@map("medicines")
+}
+
+// ── Stock Batch ───────────────────────────────────────────────
+
+model StockBatch {
+  id                String   @id @default(cuid())
+  medicineId        String   @map("medicine_id")
+  batchNumber       String   @map("batch_number")
+  manufactureDate   DateTime @map("manufacture_date")
+  expiryDate        DateTime @map("expiry_date")
+  quantityReceived  Int      @map("quantity_received")
+  quantityRemaining Int      @map("quantity_remaining")
+  costPricePerPiece Decimal? @map("cost_price_per_piece") @db.Decimal(10, 2)
+  notes             String?
+  receivedAt        DateTime @default(now()) @map("received_at")
+  createdById       String   @map("created_by_id")
+
+  medicine        Medicine         @relation(fields: [medicineId], references: [id])
+  createdBy       User             @relation(fields: [createdById], references: [id])
+  stockDeductions StockDeduction[]
+
+  @@index([medicineId])
+  @@index([expiryDate])
+  @@map("stock_batches")
+}
+
+// ── Stock Deduction ───────────────────────────────────────────
+
+model StockDeduction {
+  id             String @id @default(cuid())
+  billLineItemId String @map("bill_line_item_id")
+  stockBatchId   String @map("stock_batch_id")
+  quantity       Int
+
+  billLineItem BillLineItem @relation(fields: [billLineItemId], references: [id], onDelete: Cascade)
+  stockBatch   StockBatch   @relation(fields: [stockBatchId], references: [id])
+
+  @@map("stock_deductions")
 }
 
 // ── System Config ─────────────────────────────────────────────

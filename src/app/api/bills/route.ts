@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { billSchema } from "@/lib/validators/bill";
 import { PRESCRIPTION_CHARGE } from "@/lib/constants";
 import { getISTDayBounds, toISTDateString } from "@/lib/utils";
+import { deductStock } from "@/lib/stock";
 
 /**
  * POST /api/bills — Create a new bill.
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest) {
             costPerPiece: item.costPerPiece,
             subtotal: item.quantity * item.costPerPiece,
             sortOrder: index,
+            medicineId: item.medicineId || null,
         }));
 
         const medicinesSubtotal = lineItems.reduce(
@@ -44,6 +46,7 @@ export async function POST(req: NextRequest) {
         const [yyyy, mm, dd] = istDateStr.split("-");
 
         let bill;
+        let stockWarnings: string[] = [];
         let attempts = 0;
         while (true) {
             const { start, end } = getISTDayBounds();
@@ -58,24 +61,60 @@ export async function POST(req: NextRequest) {
             const billNumber = `${yyyy}${mm}${dd}-${seq}`;
 
             try {
-                bill = await prisma.bill.create({
-                    data: {
-                        billNumber,
-                        createdBy: session.user.id,
-                        customerName: parsed.customerName || null,
-                        paymentMode: parsed.paymentMode,
-                        hasPrescription: parsed.hasPrescription,
-                        prescriptionCharge,
-                        medicinesSubtotal,
-                        grandTotal,
-                        lineItems: {
-                            create: lineItems,
+                const result = await prisma.$transaction(async (tx) => {
+                    const createdBill = await tx.bill.create({
+                        data: {
+                            billNumber,
+                            createdBy: session.user!.id,
+                            customerName: parsed.customerName || null,
+                            paymentMode: parsed.paymentMode,
+                            hasPrescription: parsed.hasPrescription,
+                            prescriptionCharge,
+                            medicinesSubtotal,
+                            grandTotal,
+                            lineItems: {
+                                create: lineItems.map((li) => ({
+                                    medicineName: li.medicineName,
+                                    quantity: li.quantity,
+                                    costPerPiece: li.costPerPiece,
+                                    subtotal: li.subtotal,
+                                    sortOrder: li.sortOrder,
+                                    medicineId: li.medicineId,
+                                })),
+                            },
                         },
-                    },
-                    include: {
-                        lineItems: true,
-                    },
+                        include: {
+                            lineItems: true,
+                        },
+                    });
+
+                    // Deduct stock for line items with a catalogued medicine
+                    const warnings: string[] = [];
+                    for (let i = 0; i < lineItems.length; i++) {
+                        const li = lineItems[i];
+                        if (li.medicineId) {
+                            const lineItemId = createdBill.lineItems.find(
+                                (cli) => cli.sortOrder === li.sortOrder
+                            )?.id;
+                            if (lineItemId) {
+                                const { insufficient } = await deductStock(
+                                    tx,
+                                    li.medicineId,
+                                    li.quantity,
+                                    lineItemId
+                                );
+                                if (insufficient) {
+                                    warnings.push(li.medicineName);
+                                }
+                            }
+                        }
+                    }
+
+                    return { bill: createdBill, warnings };
                 });
+
+                bill = result.bill;
+                stockWarnings = result.warnings;
                 break;
             } catch (err: unknown) {
                 if (
@@ -99,6 +138,7 @@ export async function POST(req: NextRequest) {
                     billNumber: bill.billNumber,
                     grandTotal: Number(bill.grandTotal),
                 },
+                ...(stockWarnings.length > 0 && { stockWarnings }),
             },
             { status: 201 }
         );

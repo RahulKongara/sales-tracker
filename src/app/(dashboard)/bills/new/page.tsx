@@ -10,6 +10,7 @@ import {
     PRESCRIPTION_CHARGE,
 } from "@/lib/constants";
 import { ArrowLeft, Pill, ChevronDown } from "lucide-react";
+import MedicineAutocomplete from "@/components/MedicineAutocomplete";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Types                                                        */
@@ -18,6 +19,7 @@ import { ArrowLeft, Pill, ChevronDown } from "lucide-react";
 interface LineItem {
     id: string;
     medicineName: string;
+    medicineId: string | null;
     quantity: number;
     costPerPiece: number;
 }
@@ -40,6 +42,7 @@ function emptyItem(): LineItem {
     return {
         id: crypto.randomUUID(),
         medicineName: "",
+        medicineId: null,
         quantity: 1,
         costPerPiece: 0,
     };
@@ -73,6 +76,7 @@ export default function NewBillPage() {
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
+    const [stockWarnings, setStockWarnings] = useState<string[]>([]);
     const [showTodayBills, setShowTodayBills] = useState(false);
 
     // ── Today's bills ──
@@ -107,10 +111,32 @@ export default function NewBillPage() {
     }, [fetchTodayBills]);
 
     // ── Line item handlers ──
-    function updateItem(id: string, field: keyof LineItem, value: string | number) {
+    function updateItem(id: string, field: keyof LineItem, value: string | number | null) {
         setLineItems((prev) =>
             prev.map((item) =>
                 item.id === id ? { ...item, [field]: value } : item
+            )
+        );
+    }
+
+    function handleMedicineSelect(
+        itemId: string,
+        name: string,
+        medicineId: string | null,
+        defaultPrice?: number
+    ) {
+        setLineItems((prev) =>
+            prev.map((item) =>
+                item.id === itemId
+                    ? {
+                          ...item,
+                          medicineName: name,
+                          medicineId,
+                          ...(defaultPrice !== undefined && item.costPerPiece === 0
+                              ? { costPerPiece: defaultPrice }
+                              : {}),
+                      }
+                    : item
             )
         );
     }
@@ -132,6 +158,7 @@ export default function NewBillPage() {
         setLineItems([emptyItem()]);
         setSuccessMsg("");
         setErrorMsg("");
+        setStockWarnings([]);
     }
 
     // ── Submit ──
@@ -139,6 +166,7 @@ export default function NewBillPage() {
         e.preventDefault();
         setErrorMsg("");
         setSuccessMsg("");
+        setStockWarnings([]);
 
         const validItems = lineItems.filter(
             (item) => item.medicineName.trim() && item.quantity > 0 && item.costPerPiece > 0
@@ -163,6 +191,7 @@ export default function NewBillPage() {
                         medicineName: item.medicineName.trim(),
                         quantity: item.quantity,
                         costPerPiece: item.costPerPiece,
+                        medicineId: item.medicineId || undefined,
                     })),
                 }),
             });
@@ -176,6 +205,9 @@ export default function NewBillPage() {
             setSuccessMsg(
                 `Bill ${data.bill.billNumber} created — ${formatCurrency(data.bill.grandTotal)}`
             );
+            if (data.stockWarnings?.length > 0) {
+                setStockWarnings(data.stockWarnings);
+            }
             resetForm();
             setSuccessMsg(
                 `Bill ${data.bill.billNumber} created — ${formatCurrency(data.bill.grandTotal)}`
@@ -240,6 +272,11 @@ export default function NewBillPage() {
                             ✕ {errorMsg}
                         </div>
                     )}
+                    {stockWarnings.length > 0 && (
+                        <div className="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-400/40 rounded-lg px-3 py-2.5 sm:px-4 sm:py-3 text-sm font-medium text-yellow-700 dark:text-yellow-400">
+                            Low/no stock for: {stockWarnings.join(", ")}. Bill saved but stock may be insufficient.
+                        </div>
+                    )}
 
                     {/* ── Line Items Card ──────────────────────── */}
                     <div className="glass-card p-3 sm:p-5">
@@ -275,11 +312,13 @@ export default function NewBillPage() {
                                             <span className="text-xs font-semibold text-fg-muted w-5 shrink-0">
                                                 {idx + 1}.
                                             </span>
-                                            <input
-                                                type="text"
+                                            <MedicineAutocomplete
                                                 value={item.medicineName}
-                                                onChange={(e) => updateItem(item.id, "medicineName", e.target.value)}
-                                                placeholder={`Medicine name`}
+                                                medicineId={item.medicineId}
+                                                onChange={(name, medId, price) =>
+                                                    handleMedicineSelect(item.id, name, medId, price)
+                                                }
+                                                placeholder="Medicine name"
                                                 className={`${INPUT_CLS} flex-1`}
                                             />
                                             <button
@@ -333,10 +372,12 @@ export default function NewBillPage() {
 
                                     {/* ── Desktop: Row layout ── */}
                                     <div className="hidden sm:grid grid-cols-[1fr_80px_100px_85px_36px] gap-2 items-center">
-                                        <input
-                                            type="text"
+                                        <MedicineAutocomplete
                                             value={item.medicineName}
-                                            onChange={(e) => updateItem(item.id, "medicineName", e.target.value)}
+                                            medicineId={item.medicineId}
+                                            onChange={(name, medId, price) =>
+                                                handleMedicineSelect(item.id, name, medId, price)
+                                            }
                                             placeholder={`Medicine ${idx + 1}`}
                                             className="w-full px-2.5 py-1.5 text-[0.8125rem] border border-border rounded-lg bg-surface text-fg
                                                        placeholder:text-fg-muted outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-150"
