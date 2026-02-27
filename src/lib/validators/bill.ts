@@ -15,6 +15,7 @@ export const lineItemSchema = z.object({
         .number()
         .min(0, "Cost cannot be negative")
         .max(99999.99, "Cost too large"),
+    medicineId: z.string().optional().nullable(),
 });
 
 export const billSchema = z.object({

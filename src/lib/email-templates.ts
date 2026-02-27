@@ -138,6 +138,38 @@ export function buildTable(
     </table>`;
 }
 
+/* ── Restock alert table ──────────────────────────────────────── */
+
+export function buildRestockAlert(
+    items: { id: string; name: string; category: string | null; currentStock: number; reorderLevel: number }[]
+): string {
+    const rows = items.map((item) => {
+        const stockColor = item.currentStock === 0 ? "#DC2626" : "#D97706";
+        return `
+      <tr>
+        <td style="padding:10px 12px; font-size:14px; color:${COLOR.text}; border-bottom:1px solid ${COLOR.border}; font-weight:500;">${item.name}</td>
+        <td style="padding:10px 12px; font-size:14px; color:${COLOR.muted}; border-bottom:1px solid ${COLOR.border};">${item.category || "—"}</td>
+        <td style="padding:10px 12px; font-size:14px; color:${stockColor}; border-bottom:1px solid ${COLOR.border}; text-align:right; font-weight:600;">${item.currentStock}</td>
+        <td style="padding:10px 12px; font-size:14px; color:${COLOR.muted}; border-bottom:1px solid ${COLOR.border}; text-align:right;">${item.reorderLevel}</td>
+      </tr>`;
+    }).join("");
+
+    const thStyle = `padding:10px 12px; text-align:left; font-size:11px; font-weight:700; color:${COLOR.muted}; text-transform:uppercase; letter-spacing:0.5px; border-bottom:2px solid ${COLOR.border};`;
+
+    return `
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="${thStyle}">Medicine</th>
+          <th style="${thStyle}">Category</th>
+          <th style="${thStyle} text-align:right;">Current Stock</th>
+          <th style="${thStyle} text-align:right;">Reorder Level</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
 /* ── Ranked list (top medicines) ──────────────────────────────── */
 
 export function buildRankedList(

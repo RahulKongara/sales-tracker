@@ -52,3 +52,34 @@ export interface RevenueTrend {
     revenue: number;
     billCount: number;
 }
+
+export interface MedicineSummary {
+    id: string;
+    name: string;
+    category: string | null;
+    defaultPrice: number;
+    reorderLevel: number;
+    currentStock: number;
+    isActive: boolean;
+}
+
+export interface StockBatchSummary {
+    id: string;
+    medicineId: string;
+    medicineName: string;
+    batchNumber: string;
+    manufactureDate: string;
+    expiryDate: string;
+    quantityReceived: number;
+    quantityRemaining: number;
+    costPricePerPiece: number | null;
+    receivedAt: string;
+}
+
+export interface RestockItem {
+    id: string;
+    name: string;
+    category: string | null;
+    currentStock: number;
+    reorderLevel: number;
+}

@@ -2,15 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PRESCRIPTION_CHARGE } from "@/lib/constants";
+import { deductStock, restoreStock } from "@/lib/stock";
 
 interface PatchLineItem {
     medicineName: string;
     quantity: number;
     costPerPiece: number;
+    medicineId?: string | null;
 }
 
 /**
  * PATCH /api/bills/:id — Admin edits a saved bill.
+ * Restores stock for old line items, then deducts for new ones.
  * Creates an AuditLog entry with the previous state before applying changes.
  */
 export async function PATCH(
@@ -78,6 +81,17 @@ export async function PATCH(
 
         // Apply edits in a transaction
         const updated = await prisma.$transaction(async (tx) => {
+            // Restore stock for old line items that had catalogued medicines
+            if (lineItems && lineItems.length > 0) {
+                const oldLineItemIdsWithMedicine = current.lineItems
+                    .filter((li) => li.medicineId)
+                    .map((li) => li.id);
+
+                if (oldLineItemIdsWithMedicine.length > 0) {
+                    await restoreStock(tx, oldLineItemIdsWithMedicine);
+                }
+            }
+
             // Update bill fields
             const bill = await tx.bill.update({
                 where: { id },
@@ -92,6 +106,7 @@ export async function PATCH(
             });
 
             // Replace line items if provided
+            let newLineItemIds: { id: string; medicineId: string | null; quantity: number; sortOrder: number }[] = [];
             if (lineItems && lineItems.length > 0) {
                 await tx.billLineItem.deleteMany({ where: { billId: id } });
                 await tx.billLineItem.createMany({
@@ -102,8 +117,24 @@ export async function PATCH(
                         costPerPiece: li.costPerPiece,
                         subtotal: li.quantity * li.costPerPiece,
                         sortOrder: i,
+                        medicineId: li.medicineId || null,
                     })),
                 });
+
+                // Fetch new line item IDs for stock deduction
+                const created = await tx.billLineItem.findMany({
+                    where: { billId: id },
+                    select: { id: true, medicineId: true, quantity: true, sortOrder: true },
+                    orderBy: { sortOrder: "asc" },
+                });
+                newLineItemIds = created;
+            }
+
+            // Deduct stock for new line items with catalogued medicines
+            for (const newLi of newLineItemIds) {
+                if (newLi.medicineId) {
+                    await deductStock(tx, newLi.medicineId, newLi.quantity, newLi.id);
+                }
             }
 
             // Audit log
@@ -133,6 +164,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/bills/:id — Soft-delete a bill (admin only).
+ * Restores stock deductions for all line items.
  */
 export async function DELETE(
     _req: NextRequest,
@@ -149,7 +181,14 @@ export async function DELETE(
     try {
         const bill = await prisma.bill.findUnique({
             where: { id },
-            select: { id: true, isDeleted: true, billNumber: true },
+            select: {
+                id: true,
+                isDeleted: true,
+                billNumber: true,
+                lineItems: {
+                    select: { id: true, medicineId: true },
+                },
+            },
         });
 
         if (!bill) {
@@ -163,19 +202,30 @@ export async function DELETE(
             );
         }
 
-        await prisma.bill.update({
-            where: { id },
-            data: { isDeleted: true },
-        });
+        await prisma.$transaction(async (tx) => {
+            // Restore stock for line items with catalogued medicines
+            const lineItemIdsWithMedicine = bill.lineItems
+                .filter((li) => li.medicineId)
+                .map((li) => li.id);
 
-        // Create audit log
-        await prisma.auditLog.create({
-            data: {
-                performedBy: session.user.id,
-                actionType: "DELETE",
-                targetBillId: id,
-                notes: `Soft-deleted bill ${bill.billNumber}`,
-            },
+            if (lineItemIdsWithMedicine.length > 0) {
+                await restoreStock(tx, lineItemIdsWithMedicine);
+            }
+
+            await tx.bill.update({
+                where: { id },
+                data: { isDeleted: true },
+            });
+
+            // Create audit log
+            await tx.auditLog.create({
+                data: {
+                    performedBy: session.user!.id,
+                    actionType: "DELETE",
+                    targetBillId: id,
+                    notes: `Soft-deleted bill ${bill.billNumber}`,
+                },
+            });
         });
 
         return NextResponse.json({ success: true, billNumber: bill.billNumber });
@@ -234,10 +284,12 @@ export async function GET(
                 grandTotal: Number(bill.grandTotal),
                 createdByName: bill.user.fullName,
                 lineItems: bill.lineItems.map((li) => ({
+                    id: li.id,
                     medicineName: li.medicineName,
                     quantity: li.quantity,
                     costPerPiece: Number(li.costPerPiece),
                     subtotal: Number(li.subtotal),
+                    medicineId: li.medicineId,
                 })),
             },
         });

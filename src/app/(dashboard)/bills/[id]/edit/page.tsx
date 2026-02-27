@@ -8,6 +8,7 @@ import {
     PAYMENT_MODE_CONFIG,
     PRESCRIPTION_CHARGE,
 } from "@/lib/constants";
+import MedicineAutocomplete from "@/components/MedicineAutocomplete";
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Types                                                        */
@@ -16,6 +17,7 @@ import {
 interface LineItem {
     id: string;
     medicineName: string;
+    medicineId: string | null;
     quantity: number;
     costPerPiece: number;
 }
@@ -28,6 +30,7 @@ function emptyItem(): LineItem {
     return {
         id: crypto.randomUUID(),
         medicineName: "",
+        medicineId: null,
         quantity: 1,
         costPerPiece: 0,
     };
@@ -39,7 +42,6 @@ const PILL_STYLES: Record<string, { bg: string; text: string }> = {
     CARD: { bg: "bg-blue-50", text: "text-blue-600" },
     PAYTM: { bg: "bg-cyan-50", text: "text-cyan-600" },
 };
-void PILL_STYLES; // suppress unused warning
 
 /* shared input classes */
 const INPUT_CLS =
@@ -100,9 +102,10 @@ export default function EditBillPage() {
             setPaymentMode(bill.paymentMode);
             setHasPrescription(bill.hasPrescription);
             setLineItems(
-                bill.lineItems.map((li: { id: string; medicineName: string; quantity: number; costPerPiece: number }) => ({
+                bill.lineItems.map((li: { id: string; medicineName: string; quantity: number; costPerPiece: number; medicineId?: string | null }) => ({
                     id: li.id || crypto.randomUUID(),
                     medicineName: li.medicineName,
+                    medicineId: li.medicineId || null,
                     quantity: li.quantity,
                     costPerPiece: li.costPerPiece,
                 }))
@@ -119,10 +122,32 @@ export default function EditBillPage() {
     }, [fetchBill]);
 
     // ── Line item handlers ──
-    function updateItem(id: string, field: keyof LineItem, value: string | number) {
+    function updateItem(id: string, field: keyof LineItem, value: string | number | null) {
         setLineItems((prev) =>
             prev.map((item) =>
                 item.id === id ? { ...item, [field]: value } : item
+            )
+        );
+    }
+
+    function handleMedicineSelect(
+        itemId: string,
+        name: string,
+        medicineId: string | null,
+        defaultPrice?: number
+    ) {
+        setLineItems((prev) =>
+            prev.map((item) =>
+                item.id === itemId
+                    ? {
+                          ...item,
+                          medicineName: name,
+                          medicineId,
+                          ...(defaultPrice !== undefined && item.costPerPiece === 0
+                              ? { costPerPiece: defaultPrice }
+                              : {}),
+                      }
+                    : item
             )
         );
     }
@@ -165,6 +190,7 @@ export default function EditBillPage() {
                         medicineName: item.medicineName.trim(),
                         quantity: item.quantity,
                         costPerPiece: item.costPerPiece,
+                        medicineId: item.medicineId || undefined,
                     })),
                 }),
             });
@@ -305,11 +331,13 @@ export default function EditBillPage() {
                                             <span className="text-xs font-semibold text-fg-muted w-5 shrink-0">
                                                 {idx + 1}.
                                             </span>
-                                            <input
-                                                type="text"
+                                            <MedicineAutocomplete
                                                 value={item.medicineName}
-                                                onChange={(e) => updateItem(item.id, "medicineName", e.target.value)}
-                                                placeholder={`Medicine name`}
+                                                medicineId={item.medicineId}
+                                                onChange={(name, medId, price) =>
+                                                    handleMedicineSelect(item.id, name, medId, price)
+                                                }
+                                                placeholder="Medicine name"
                                                 className={`${INPUT_CLS} flex-1`}
                                             />
                                             <button
@@ -363,10 +391,12 @@ export default function EditBillPage() {
 
                                     {/* ── Desktop: Row layout ── */}
                                     <div className="hidden sm:grid grid-cols-[1fr_80px_100px_85px_36px] gap-2 items-center">
-                                        <input
-                                            type="text"
+                                        <MedicineAutocomplete
                                             value={item.medicineName}
-                                            onChange={(e) => updateItem(item.id, "medicineName", e.target.value)}
+                                            medicineId={item.medicineId}
+                                            onChange={(name, medId, price) =>
+                                                handleMedicineSelect(item.id, name, medId, price)
+                                            }
                                             placeholder={`Medicine ${idx + 1}`}
                                             className="w-full px-2.5 py-1.5 text-[0.8125rem] border border-border rounded-lg bg-surface text-fg
                                                        placeholder:text-fg-muted outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-150"

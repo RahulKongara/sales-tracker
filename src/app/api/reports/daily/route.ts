@@ -12,6 +12,7 @@ import {
     buildSectionHeader,
     buildTable,
     buildRankedList,
+    buildRestockAlert,
 } from "@/lib/email-templates";
 
 /**
@@ -28,7 +29,7 @@ async function handler(req: Request) {
         const todayStr = toISTDateString(now);
         const { start, end } = getISTDayBounds(now);
 
-        const [bills, aggregate] = await Promise.all([
+        const [bills, aggregate, allMedicines] = await Promise.all([
             prisma.bill.findMany({
                 where: { createdAt: { gte: start, lte: end }, isDeleted: false },
                 include: {
@@ -42,7 +43,14 @@ async function handler(req: Request) {
                 _sum: { grandTotal: true, prescriptionCharge: true, medicinesSubtotal: true },
                 _count: true,
             }),
+            prisma.medicine.findMany({
+                where: { isActive: true },
+                select: { id: true, name: true, category: true, currentStock: true, reorderLevel: true },
+            }),
         ]);
+
+        // Low stock medicines
+        const lowStockMedicines = allMedicines.filter((m) => m.currentStock <= m.reorderLevel);
 
         const totalRevenue = Number(aggregate._sum.grandTotal || 0);
         const totalRx = Number(aggregate._sum.prescriptionCharge || 0);
@@ -132,6 +140,10 @@ async function handler(req: Request) {
                 buildRankedList(
                     topMeds.map((m) => ({ name: m.name, value: `${m.quantity} units` }))
                 ),
+                ...(lowStockMedicines.length > 0 ? [
+                    buildSectionHeader("Medicines to Restock"),
+                    buildRestockAlert(lowStockMedicines),
+                ] : []),
             ].join("");
 
             const htmlBody = wrapEmailTemplate("Daily", dateDisplay, bodyHtml);
